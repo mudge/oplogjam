@@ -66,7 +66,11 @@ module Oplogjam
       update.fetch('$set', {}).inject(column) do |target, (field, value)|
         path = field.split('.')
 
-        Sequel.pg_jsonb(target).set(path, value.to_json)
+        Sequel
+          .pg_jsonb(intermediate_objects(path))
+          .op
+          .concat(Sequel.pg_jsonb(target))
+          .set(path, value.to_json)
       end
     end
 
@@ -76,6 +80,17 @@ module Oplogjam
 
         Sequel.pg_jsonb(target).delete_path(path)
       end
+    end
+
+    def intermediate_objects(path)
+      tree = {}
+      path.inject(tree) do |acc, key|
+        acc[key] = {}
+
+        acc[key]
+      end
+
+      tree
     end
   end
 end

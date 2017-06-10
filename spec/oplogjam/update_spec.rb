@@ -121,7 +121,7 @@ module Oplogjam
           )
           update = described_class.from(bson)
 
-          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = jsonb_set(\"document\", ARRAY['bar'], '\"baz\"', true), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
+          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = jsonb_set(('{\"bar\":{}}'::jsonb || \"document\"), ARRAY['bar'], '\"baz\"', true), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
         end
       end
 
@@ -139,7 +139,7 @@ module Oplogjam
           )
           update = described_class.from(bson)
 
-          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = jsonb_set(\"document\", ARRAY['bar','baz'], '\"quux\"', true), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
+          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = jsonb_set(('{\"bar\":{\"baz\":{}}}'::jsonb || \"document\"), ARRAY['bar','baz'], '\"quux\"', true), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
         end
       end
 
@@ -157,7 +157,7 @@ module Oplogjam
           )
           update = described_class.from(bson)
 
-          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = jsonb_set(jsonb_set(\"document\", ARRAY['bar'], '\"baz\"', true), ARRAY['baz'], '\"quux\"', true), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
+          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = jsonb_set(('{\"baz\":{}}'::jsonb || jsonb_set(('{\"bar\":{}}'::jsonb || \"document\"), ARRAY['bar'], '\"baz\"', true)), ARRAY['baz'], '\"quux\"', true), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
         end
       end
 
@@ -211,7 +211,7 @@ module Oplogjam
           )
           update = described_class.from(bson)
 
-          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = (jsonb_set(\"document\", ARRAY['bar'], '\"quux\"', true) #- ARRAY['baz']), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
+          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = (jsonb_set(('{\"bar\":{}}'::jsonb || \"document\"), ARRAY['bar'], '\"quux\"', true) #- ARRAY['baz']), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
         end
       end
 
