@@ -13,7 +13,7 @@ module Oplogjam
 
       new(h, ts, ns, o2, o)
     rescue KeyError => e
-      fail InvalidUpdate, "missing field: #{e}"
+      raise InvalidUpdate, "missing field: #{e}"
     end
 
     def initialize(h, ts, ns, o2, o)
@@ -24,10 +24,10 @@ module Oplogjam
       @o = Oplogjam::Document(o)
     end
 
-    alias_method :id, :h
-    alias_method :namespace, :ns
-    alias_method :query, :o2
-    alias_method :update, :o
+    alias id h
+    alias namespace ns
+    alias query o2
+    alias update o
 
     def timestamp
       Time.at(ts.seconds, ts.increment)
@@ -46,12 +46,11 @@ module Oplogjam
     def to_sql
       table_name = namespace.split('.', 2).join('_')
       row_id = String(query.fetch('_id'))
-      attributes = {
-        :document => jsonb_update,
-        :updated_at => Time.now.utc
-      }
 
-      DB.from(table_name).where(:id => row_id).update_sql(attributes)
+      DB
+        .from(table_name)
+        .where(id: row_id)
+        .update_sql(document: jsonb_update, updated_at: Time.now.utc)
     end
 
     private

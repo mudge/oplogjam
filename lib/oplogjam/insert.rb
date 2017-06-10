@@ -12,7 +12,7 @@ module Oplogjam
 
       new(h, ts, ns, o)
     rescue KeyError => e
-      fail InvalidInsert, "missing field: #{e}"
+      raise InvalidInsert, "missing field: #{e}"
     end
 
     def initialize(h, ts, ns, o)
@@ -22,9 +22,9 @@ module Oplogjam
       @o = Oplogjam::Document(o)
     end
 
-    alias_method :namespace, :ns
-    alias_method :id, :h
-    alias_method :document, :o
+    alias namespace ns
+    alias id h
+    alias document o
 
     def timestamp
       Time.at(ts.seconds, ts.increment)
@@ -43,14 +43,13 @@ module Oplogjam
     def to_sql
       table_name = namespace.split('.', 2).join('_')
       row_id = String(document.fetch('_id'))
-      attributes = {
-        :id => row_id,
-        :document => Sequel.pg_jsonb(document),
-        :created_at => Time.now.utc,
-        :updated_at => Time.now.utc
-      }
 
-      DB.from(table_name).insert_sql(attributes)
+      DB
+        .from(table_name)
+        .insert_sql(id: row_id,
+                    document: Sequel.pg_jsonb(document),
+                    created_at: Time.now.utc,
+                    updated_at: Time.now.utc)
     end
   end
 end

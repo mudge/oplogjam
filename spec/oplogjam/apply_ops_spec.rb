@@ -6,22 +6,22 @@ module Oplogjam
     describe '.from' do
       it 'converts a BSON applyOps to an ApplyOps' do
         bson = BSON::Document.new(
-          :ts => BSON::Timestamp.new(1479420028, 1),
-          :t => 1,
-          :h => -1789557309812000233,
-          :v => 2,
-          :op => 'c',
-          :ns => 'foo.$cmd',
-          :o => BSON::Document.new(
-            :applyOps => [
+          ts: BSON::Timestamp.new(1_479_420_028, 1),
+          t: 1,
+          h: -1_789_557_309_812_000_233,
+          v: 2,
+          op: 'c',
+          ns: 'foo.$cmd',
+          o: BSON::Document.new(
+            applyOps: [
               BSON::Document.new(
-                :ts => BSON::Timestamp.new(1496414570, 11),
-                :t => 14,
-                :h => -3028027288268436781,
-                :v => 2,
-                :op => 'i',
-                :ns => 'foo.bar',
-                :o => BSON::Document.new(:_id => 1, :baz => 'quux')
+                ts: BSON::Timestamp.new(1_496_414_570, 11),
+                t: 14,
+                h: -3_028_027_288_268_436_781,
+                v: 2,
+                op: 'i',
+                ns: 'foo.bar',
+                o: BSON::Document.new(_id: 1, baz: 'quux')
               )
             ]
           )
@@ -32,12 +32,12 @@ module Oplogjam
 
       it 'raises an error if the operations are missing' do
         bson = BSON::Document.new(
-          :ts => BSON::Timestamp.new(1479420028, 1),
-          :t => 1,
-          :h => -1789557309812000233,
-          :v => 2,
-          :op => 'c',
-          :ns => 'foo.$cmd'
+          ts: BSON::Timestamp.new(1_479_420_028, 1),
+          t: 1,
+          h: -1_789_557_309_812_000_233,
+          v: 2,
+          op: 'c',
+          ns: 'foo.$cmd'
         )
 
         expect { described_class.from(bson) }.to raise_error(InvalidApplyOps)
@@ -47,51 +47,51 @@ module Oplogjam
     describe '#timestamp' do
       it 'returns the timestamp as a Time' do
         bson = BSON::Document.new(
-          :ts => BSON::Timestamp.new(1479420028, 1),
-          :t => 1,
-          :h => -1789557309812000233,
-          :v => 2,
-          :op => 'c',
-          :ns => 'foo.$cmd',
-          :o => BSON::Document.new(
-            :applyOps => [
+          ts: BSON::Timestamp.new(1_479_420_028, 1),
+          t: 1,
+          h: -1_789_557_309_812_000_233,
+          v: 2,
+          op: 'c',
+          ns: 'foo.$cmd',
+          o: BSON::Document.new(
+            applyOps: [
               BSON::Document.new(
-                :ts => BSON::Timestamp.new(1496414570, 11),
-                :t => 14,
-                :h => -3028027288268436781,
-                :v => 2,
-                :op => 'i',
-                :ns => 'foo.bar',
-                :o => BSON::Document.new(:_id => 1, :baz => 'quux')
+                ts: BSON::Timestamp.new(1_496_414_570, 11),
+                t: 14,
+                h: -3_028_027_288_268_436_781,
+                v: 2,
+                op: 'i',
+                ns: 'foo.bar',
+                o: BSON::Document.new(_id: 1, baz: 'quux')
               )
             ]
           )
         )
         apply_ops = described_class.from(bson)
 
-        expect(apply_ops.timestamp).to eq(Time.at(1479420028, 1))
+        expect(apply_ops.timestamp).to eq(Time.at(1_479_420_028, 1))
       end
     end
 
     describe '#namespace' do
       it 'returns the namespace' do
         bson = BSON::Document.new(
-          :ts => BSON::Timestamp.new(1479420028, 1),
-          :t => 1,
-          :h => -1789557309812000233,
-          :v => 2,
-          :op => 'c',
-          :ns => 'foo.$cmd',
-          :o => BSON::Document.new(
-            :applyOps => [
+          ts: BSON::Timestamp.new(1_479_420_028, 1),
+          t: 1,
+          h: -1_789_557_309_812_000_233,
+          v: 2,
+          op: 'c',
+          ns: 'foo.$cmd',
+          o: BSON::Document.new(
+            applyOps: [
               BSON::Document.new(
-                :ts => BSON::Timestamp.new(1496414570, 11),
-                :t => 14,
-                :h => -3028027288268436781,
-                :v => 2,
-                :op => 'i',
-                :ns => 'foo.bar',
-                :o => BSON::Document.new(:_id => 1, :baz => 'quux')
+                ts: BSON::Timestamp.new(1_496_414_570, 11),
+                t: 14,
+                h: -3_028_027_288_268_436_781,
+                v: 2,
+                op: 'i',
+                ns: 'foo.bar',
+                o: BSON::Document.new(_id: 1, baz: 'quux')
               )
             ]
           )
@@ -105,66 +105,66 @@ module Oplogjam
     describe '#id' do
       it 'returns a unique identifier for the operation' do
         bson = BSON::Document.new(
-          :ts => BSON::Timestamp.new(1479420028, 1),
-          :t => 1,
-          :h => -1789557309812000233,
-          :v => 2,
-          :op => 'c',
-          :ns => 'foo.$cmd',
-          :o => BSON::Document.new(
-            :applyOps => [
+          ts: BSON::Timestamp.new(1_479_420_028, 1),
+          t: 1,
+          h: -1_789_557_309_812_000_233,
+          v: 2,
+          op: 'c',
+          ns: 'foo.$cmd',
+          o: BSON::Document.new(
+            applyOps: [
               BSON::Document.new(
-                :ts => BSON::Timestamp.new(1496414570, 11),
-                :t => 14,
-                :h => -3028027288268436781,
-                :v => 2,
-                :op => 'i',
-                :ns => 'foo.bar',
-                :o => BSON::Document.new(:_id => 1, :baz => 'quux')
+                ts: BSON::Timestamp.new(1_496_414_570, 11),
+                t: 14,
+                h: -3_028_027_288_268_436_781,
+                v: 2,
+                op: 'i',
+                ns: 'foo.bar',
+                o: BSON::Document.new(_id: 1, baz: 'quux')
               )
             ]
           )
         )
         apply_ops = described_class.from(bson)
 
-        expect(apply_ops.id).to eq(-1789557309812000233)
+        expect(apply_ops.id).to eq(-1_789_557_309_812_000_233)
       end
     end
 
     describe '#operations' do
       it 'returns the operations' do
         bson = BSON::Document.new(
-          :ts => BSON::Timestamp.new(1479420028, 1),
-          :t => 1,
-          :h => -1789557309812000233,
-          :v => 2,
-          :op => 'c',
-          :ns => 'foo.$cmd',
-          :o => BSON::Document.new(
-            :applyOps => [
+          ts: BSON::Timestamp.new(1_479_420_028, 1),
+          t: 1,
+          h: -1_789_557_309_812_000_233,
+          v: 2,
+          op: 'c',
+          ns: 'foo.$cmd',
+          o: BSON::Document.new(
+            applyOps: [
               BSON::Document.new(
-                :ts => BSON::Timestamp.new(1496414570, 11),
-                :t => 14,
-                :h => -3028027288268436781,
-                :v => 2,
-                :op => 'i',
-                :ns => 'foo.bar',
-                :o => BSON::Document.new(:_id => 1, :baz => 'quux')
+                ts: BSON::Timestamp.new(1_496_414_570, 11),
+                t: 14,
+                h: -3_028_027_288_268_436_781,
+                v: 2,
+                op: 'i',
+                ns: 'foo.bar',
+                o: BSON::Document.new(_id: 1, baz: 'quux')
               )
             ]
           )
         )
         apply_ops = described_class.from(bson)
         insert = Insert.from(
-            BSON::Document.new(
-              :ts => BSON::Timestamp.new(1496414570, 11),
-              :t => 14,
-              :h => -3028027288268436781,
-              :v => 2,
-              :op => 'i',
-              :ns => 'foo.bar',
-              :o => BSON::Document.new(:_id => 1, :baz => 'quux')
-            )
+          BSON::Document.new(
+            ts: BSON::Timestamp.new(1_496_414_570, 11),
+            t: 14,
+            h: -3_028_027_288_268_436_781,
+            v: 2,
+            op: 'i',
+            ns: 'foo.bar',
+            o: BSON::Document.new(_id: 1, baz: 'quux')
+          )
         )
 
         expect(apply_ops.operations).to contain_exactly(insert)
@@ -175,22 +175,22 @@ module Oplogjam
       it 'returns the SQL of each operation' do
         Timecop.freeze(Time.utc(2001)) do
           bson = BSON::Document.new(
-            :ts => BSON::Timestamp.new(1479420028, 1),
-            :t => 1,
-            :h => -1789557309812000233,
-            :v => 2,
-            :op => 'c',
-            :ns => 'foo.$cmd',
-            :o => BSON::Document.new(
-              :applyOps => [
+            ts: BSON::Timestamp.new(1_479_420_028, 1),
+            t: 1,
+            h: -1_789_557_309_812_000_233,
+            v: 2,
+            op: 'c',
+            ns: 'foo.$cmd',
+            o: BSON::Document.new(
+              applyOps: [
                 BSON::Document.new(
-                  :ts => BSON::Timestamp.new(1496414570, 11),
-                  :t => 14,
-                  :h => -3028027288268436781,
-                  :v => 2,
-                  :op => 'i',
-                  :ns => 'foo.bar',
-                  :o => BSON::Document.new(:_id => 1, :baz => 'quux')
+                  ts: BSON::Timestamp.new(1_496_414_570, 11),
+                  t: 14,
+                  h: -3_028_027_288_268_436_781,
+                  v: 2,
+                  op: 'i',
+                  ns: 'foo.bar',
+                  o: BSON::Document.new(_id: 1, baz: 'quux')
                 )
               ]
             )

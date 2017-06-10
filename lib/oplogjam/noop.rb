@@ -12,7 +12,7 @@ module Oplogjam
 
       new(h, ts, msg)
     rescue KeyError => e
-      fail InvalidNoop, "missing field: #{e}"
+      raise InvalidNoop, "missing field: #{e}"
     end
 
     def initialize(h, ts, msg)
@@ -21,8 +21,8 @@ module Oplogjam
       @msg = String(msg)
     end
 
-    alias_method :message, :msg
-    alias_method :id, :h
+    alias message msg
+    alias id h
 
     def timestamp
       Time.at(ts.seconds, ts.increment)
@@ -34,10 +34,8 @@ module Oplogjam
       id == other.id
     end
 
-    def apply(_connection)
-    end
+    def apply(_connection); end
 
-    def to_sql
-    end
+    def to_sql; end
   end
 end

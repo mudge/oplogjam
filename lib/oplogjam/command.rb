@@ -12,7 +12,7 @@ module Oplogjam
 
       new(h, ts, ns, o)
     rescue KeyError => e
-      fail InvalidCommand, "missing field: #{e}"
+      raise InvalidCommand, "missing field: #{e}"
     end
 
     def initialize(h, ts, ns, o)
@@ -22,9 +22,9 @@ module Oplogjam
       @o = Oplogjam::Document(o)
     end
 
-    alias_method :id, :h
-    alias_method :command, :o
-    alias_method :namespace, :ns
+    alias id h
+    alias command o
+    alias namespace ns
 
     def timestamp
       Time.at(ts.seconds, ts.increment)
@@ -36,10 +36,8 @@ module Oplogjam
       id == other.id
     end
 
-    def apply(_connection)
-    end
+    def apply(_connection); end
 
-    def to_sql
-    end
+    def to_sql; end
   end
 end

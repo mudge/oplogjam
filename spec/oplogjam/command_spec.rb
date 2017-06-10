@@ -6,13 +6,13 @@ module Oplogjam
     describe '.from' do
       it 'converts a BSON command into a Command' do
         bson = BSON::Document.new(
-          :ts => BSON::Timestamp.new(1479420028, 1),
-          :t => 1,
-          :h => -1789557309812000233,
-          :v => 2,
-          :op => 'c',
-          :ns => 'foo.$cmd',
-          :o => BSON::Document.new(:create => 'bar')
+          ts: BSON::Timestamp.new(1_479_420_028, 1),
+          t: 1,
+          h: -1_789_557_309_812_000_233,
+          v: 2,
+          op: 'c',
+          ns: 'foo.$cmd',
+          o: BSON::Document.new(create: 'bar')
         )
 
         expect(described_class.from(bson)).to be_a(described_class)
@@ -20,12 +20,12 @@ module Oplogjam
 
       it 'raises an error if the command is missing' do
         bson = BSON::Document.new(
-          :ts => BSON::Timestamp.new(1479420028, 1),
-          :t => 1,
-          :h => -1789557309812000233,
-          :v => 2,
-          :op => 'c',
-          :ns => 'foo.$cmd'
+          ts: BSON::Timestamp.new(1_479_420_028, 1),
+          t: 1,
+          h: -1_789_557_309_812_000_233,
+          v: 2,
+          op: 'c',
+          ns: 'foo.$cmd'
         )
 
         expect { described_class.from(bson) }.to raise_error(InvalidCommand)
@@ -35,30 +35,30 @@ module Oplogjam
     describe '#id' do
       it 'returns a unique identifier for the command' do
         bson = BSON::Document.new(
-          :ts => BSON::Timestamp.new(1479420028, 1),
-          :t => 1,
-          :h => -1789557309812000233,
-          :v => 2,
-          :op => 'c',
-          :ns => 'foo.$cmd',
-          :o => BSON::Document.new(:create => 'bar')
+          ts: BSON::Timestamp.new(1_479_420_028, 1),
+          t: 1,
+          h: -1_789_557_309_812_000_233,
+          v: 2,
+          op: 'c',
+          ns: 'foo.$cmd',
+          o: BSON::Document.new(create: 'bar')
         )
         command = described_class.from(bson)
 
-        expect(command.id).to eq(-1789557309812000233)
+        expect(command.id).to eq(-1_789_557_309_812_000_233)
       end
     end
 
     describe '#namespace' do
       it 'returns the namespace' do
         bson = BSON::Document.new(
-          :ts => BSON::Timestamp.new(1479420028, 1),
-          :t => 1,
-          :h => -1789557309812000233,
-          :v => 2,
-          :op => 'c',
-          :ns => 'foo.$cmd',
-          :o => BSON::Document.new(:create => 'bar')
+          ts: BSON::Timestamp.new(1_479_420_028, 1),
+          t: 1,
+          h: -1_789_557_309_812_000_233,
+          v: 2,
+          op: 'c',
+          ns: 'foo.$cmd',
+          o: BSON::Document.new(create: 'bar')
         )
         command = described_class.from(bson)
 
@@ -69,47 +69,47 @@ module Oplogjam
     describe '#timestamp' do
       it 'returns the timestamp as a Time' do
         bson = BSON::Document.new(
-          :ts => BSON::Timestamp.new(1479420028, 1),
-          :t => 1,
-          :h => -1789557309812000233,
-          :v => 2,
-          :op => 'c',
-          :ns => 'foo.$cmd',
-          :o => BSON::Document.new(:create => 'bar')
+          ts: BSON::Timestamp.new(1_479_420_028, 1),
+          t: 1,
+          h: -1_789_557_309_812_000_233,
+          v: 2,
+          op: 'c',
+          ns: 'foo.$cmd',
+          o: BSON::Document.new(create: 'bar')
         )
         command = described_class.from(bson)
 
-        expect(command.timestamp).to eq(Time.at(1479420028, 1))
+        expect(command.timestamp).to eq(Time.at(1_479_420_028, 1))
       end
     end
 
     describe '#command' do
       it 'returns the command' do
         bson = BSON::Document.new(
-          :ts => BSON::Timestamp.new(1479420028, 1),
-          :t => 1,
-          :h => -1789557309812000233,
-          :v => 2,
-          :op => 'c',
-          :ns => 'foo.$cmd',
-          :o => BSON::Document.new(:create => 'bar')
+          ts: BSON::Timestamp.new(1_479_420_028, 1),
+          t: 1,
+          h: -1_789_557_309_812_000_233,
+          v: 2,
+          op: 'c',
+          ns: 'foo.$cmd',
+          o: BSON::Document.new(create: 'bar')
         )
         command = described_class.from(bson)
 
-        expect(command.command).to eq(BSON::Document.new(:create => 'bar'))
+        expect(command.command).to eq(BSON::Document.new(create: 'bar'))
       end
     end
 
     describe '#to_sql' do
       it 'returns nil' do
         bson = BSON::Document.new(
-          :ts => BSON::Timestamp.new(1479420028, 1),
-          :t => 1,
-          :h => -1789557309812000233,
-          :v => 2,
-          :op => 'c',
-          :ns => 'foo.$cmd',
-          :o => BSON::Document.new(:create => 'bar')
+          ts: BSON::Timestamp.new(1_479_420_028, 1),
+          t: 1,
+          h: -1_789_557_309_812_000_233,
+          v: 2,
+          op: 'c',
+          ns: 'foo.$cmd',
+          o: BSON::Document.new(create: 'bar')
         )
         command = described_class.from(bson)
 

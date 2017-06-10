@@ -13,7 +13,7 @@ module Oplogjam
 
       new(h, ts, ns, apply_ops)
     rescue KeyError => e
-      fail InvalidApplyOps, "missing field: #{e}"
+      raise InvalidApplyOps, "missing field: #{e}"
     end
 
     def initialize(h, ts, ns, apply_ops)
@@ -23,8 +23,8 @@ module Oplogjam
       @apply_ops = Array(apply_ops)
     end
 
-    alias_method :id, :h
-    alias_method :namespace, :ns
+    alias id h
+    alias namespace ns
 
     def timestamp
       Time.at(ts.seconds, ts.increment)
@@ -41,7 +41,7 @@ module Oplogjam
     end
 
     def to_sql
-      operations.map { |operation| operation.to_sql }.join(';')
+      operations.map(&:to_sql).join(';')
     end
   end
 end

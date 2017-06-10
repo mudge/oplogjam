@@ -12,7 +12,7 @@ module Oplogjam
 
       new(h, ts, ns, o)
     rescue KeyError => e
-      fail InvalidDelete, "missing field: #{e}"
+      raise InvalidDelete, "missing field: #{e}"
     end
 
     def initialize(h, ts, ns, o)
@@ -22,9 +22,9 @@ module Oplogjam
       @o = Oplogjam::Document(o)
     end
 
-    alias_method :id, :h
-    alias_method :namespace, :ns
-    alias_method :query, :o
+    alias id h
+    alias namespace ns
+    alias query o
 
     def timestamp
       Time.at(ts.seconds, ts.increment)
@@ -44,7 +44,10 @@ module Oplogjam
       table_name = namespace.split('.', 2).join('_')
       row_id = String(query.fetch('_id'))
 
-      DB.from(table_name).where(:id => row_id).delete_sql
+      DB
+        .from(table_name)
+        .where(id: row_id)
+        .update_sql(deleted_at: Time.now.utc)
     end
   end
 end
