@@ -214,6 +214,24 @@ module Oplogjam
           expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = (jsonb_set(\"document\", ARRAY['bar'], '\"quux\"', true) #- ARRAY['baz']), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
         end
       end
+
+      it 'supports replacement' do
+        Timecop.freeze(Time.utc(2001)) do
+          bson = BSON::Document.new(
+            :ts => BSON::Timestamp.new(1479561033, 1),
+            :t => 2,
+            :h => 3511341713062188019,
+            :v => 2,
+            :op => 'u',
+            :ns => 'foo.bar',
+            :o2 => BSON::Document.new(:_id => BSON::ObjectId('583033a3643431ab5be6ec35')),
+            :o => BSON::Document.new(:_id => BSON::ObjectId('583033a3643431ab5be6ec35'), 'bar' => 'baz')
+          )
+          update = described_class.from(bson)
+
+          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = '{\"_id\":{\"$oid\":\"583033a3643431ab5be6ec35\"},\"bar\":\"baz\"}'::jsonb, \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
+        end
+      end
     end
   end
 end

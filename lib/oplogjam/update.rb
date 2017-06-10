@@ -47,7 +47,7 @@ module Oplogjam
       table_name = namespace.split('.', 2).join('_')
       row_id = String(query.fetch('_id'))
       attributes = {
-        :document => unsets_to_jsonb(sets_to_jsonb),
+        :document => jsonb_update,
         :updated_at => Time.now.utc
       }
 
@@ -55,6 +55,12 @@ module Oplogjam
     end
 
     private
+
+    def jsonb_update
+      return Sequel.pg_jsonb(update) unless update.key?('$set') || update.key?('$unset')
+
+      unsets_to_jsonb(sets_to_jsonb)
+    end
 
     def sets_to_jsonb(column = :document)
       update.fetch('$set', {}).inject(column) do |target, (field, value)|
