@@ -1,27 +1,15 @@
-require 'oplogjam/apply_ops'
-require 'oplogjam/command'
-require 'oplogjam/delete'
-require 'oplogjam/insert'
-require 'oplogjam/noop'
-require 'oplogjam/update'
+require 'oplogjam/operation'
 
 module Oplogjam
-  UnknownOperation = Class.new(ArgumentError)
+  def self.Timestamp(ts)
+    raise TypeError, "#{ts} is not a BSON Timestamp" unless ts.is_a?(BSON::Timestamp)
 
-  def self.from(bson)
-    case bson[:op]
-    when 'n' then Noop.new(bson)
-    when 'i' then Insert.new(bson)
-    when 'u' then Update.new(bson)
-    when 'd' then Delete.new(bson)
-    when 'c'
-      if bson[:o].key?(:applyOps)
-        ApplyOps.new(bson)
-      else
-        Command.new(bson)
-      end
-    else
-      raise UnknownOperation, "unknown operation: #{bson}"
-    end
+    ts
+  end
+
+  def self.Document(document)
+    raise TypeError, "#{document} is not a BSON Document" unless document.is_a?(BSON::Document)
+
+    document
   end
 end

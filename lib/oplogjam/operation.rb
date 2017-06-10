@@ -1,29 +1,31 @@
+require 'oplogjam/apply_ops'
+require 'oplogjam/command'
+require 'oplogjam/delete'
+require 'oplogjam/insert'
+require 'oplogjam/noop'
+require 'oplogjam/update'
+
 module Oplogjam
+  InvalidOperation = Class.new(ArgumentError)
+
   class Operation
-    attr_reader :document
+    def self.from(bson)
+      op = bson.fetch('op', 'unknown')
 
-    def initialize(document)
-      @document = document
-    end
-
-    def timestamp
-      Time.at(ts.seconds, ts.increment)
-    end
-
-    def id
-      document[:h]
-    end
-
-    def o
-      document[:o]
-    end
-
-    def ts
-      document[:ts]
-    end
-
-    def ==(other)
-      other.is_a?(Operation) && id == other.id
+      case op
+      when 'n' then Noop.from(bson)
+      when 'i' then Insert.from(bson)
+      when 'u' then Update.from(bson)
+      when 'd' then Delete.from(bson)
+      when 'c'
+        if bson.fetch('o', {}).key?('applyOps')
+          ApplyOps.from(bson)
+        else
+          Command.from(bson)
+        end
+      else
+        raise InvalidOperation, "invalid operation: #{bson}"
+      end
     end
   end
 end
