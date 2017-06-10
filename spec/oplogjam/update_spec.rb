@@ -105,5 +105,115 @@ module Oplogjam
         expect(update.update).to eq(BSON::Document.new('$set' => BSON::Document.new('bar' => 'baz')))
       end
     end
+
+    describe '#to_sql' do
+      it 'returns SQL equivalent to the update' do
+        Timecop.freeze(Time.utc(2001)) do
+          bson = BSON::Document.new(
+            :ts => BSON::Timestamp.new(1479561033, 1),
+            :t => 2,
+            :h => 3511341713062188019,
+            :v => 2,
+            :op => 'u',
+            :ns => 'foo.bar',
+            :o2 => BSON::Document.new(:_id => BSON::ObjectId('583033a3643431ab5be6ec35')),
+            :o => BSON::Document.new('$set' => BSON::Document.new('bar' => 'baz'))
+          )
+          update = described_class.from(bson)
+
+          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = jsonb_set(\"document\", ARRAY['bar'], '\"baz\"', true), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
+        end
+      end
+
+      it 'supports nested field updates' do
+        Timecop.freeze(Time.utc(2001)) do
+          bson = BSON::Document.new(
+            :ts => BSON::Timestamp.new(1479561033, 1),
+            :t => 2,
+            :h => 3511341713062188019,
+            :v => 2,
+            :op => 'u',
+            :ns => 'foo.bar',
+            :o2 => BSON::Document.new(:_id => BSON::ObjectId('583033a3643431ab5be6ec35')),
+            :o => BSON::Document.new('$set' => BSON::Document.new('bar.baz' => 'quux'))
+          )
+          update = described_class.from(bson)
+
+          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = jsonb_set(\"document\", ARRAY['bar','baz'], '\"quux\"', true), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
+        end
+      end
+
+      it 'supports multiple updates' do
+        Timecop.freeze(Time.utc(2001)) do
+          bson = BSON::Document.new(
+            :ts => BSON::Timestamp.new(1479561033, 1),
+            :t => 2,
+            :h => 3511341713062188019,
+            :v => 2,
+            :op => 'u',
+            :ns => 'foo.bar',
+            :o2 => BSON::Document.new(:_id => BSON::ObjectId('583033a3643431ab5be6ec35')),
+            :o => BSON::Document.new('$set' => BSON::Document.new('bar' => 'baz', 'baz' => 'quux'))
+          )
+          update = described_class.from(bson)
+
+          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = jsonb_set(jsonb_set(\"document\", ARRAY['bar'], '\"baz\"', true), ARRAY['baz'], '\"quux\"', true), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
+        end
+      end
+
+      it 'supports unsetting fields' do
+        Timecop.freeze(Time.utc(2001)) do
+          bson = BSON::Document.new(
+            :ts => BSON::Timestamp.new(1479561033, 1),
+            :t => 2,
+            :h => 3511341713062188019,
+            :v => 2,
+            :op => 'u',
+            :ns => 'foo.bar',
+            :o2 => BSON::Document.new(:_id => BSON::ObjectId('583033a3643431ab5be6ec35')),
+            :o => BSON::Document.new('$unset' => BSON::Document.new('bar' => ''))
+          )
+          update = described_class.from(bson)
+
+          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = (\"document\" #- ARRAY['bar']), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
+        end
+      end
+
+      it 'supports unsetting multiple fields' do
+        Timecop.freeze(Time.utc(2001)) do
+          bson = BSON::Document.new(
+            :ts => BSON::Timestamp.new(1479561033, 1),
+            :t => 2,
+            :h => 3511341713062188019,
+            :v => 2,
+            :op => 'u',
+            :ns => 'foo.bar',
+            :o2 => BSON::Document.new(:_id => BSON::ObjectId('583033a3643431ab5be6ec35')),
+            :o => BSON::Document.new('$unset' => BSON::Document.new('bar' => '', 'baz' => ''))
+          )
+          update = described_class.from(bson)
+
+          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = ((\"document\" #- ARRAY['bar']) #- ARRAY['baz']), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
+        end
+      end
+
+      it 'supports setting and unsetting at the same time' do
+        Timecop.freeze(Time.utc(2001)) do
+          bson = BSON::Document.new(
+            :ts => BSON::Timestamp.new(1479561033, 1),
+            :t => 2,
+            :h => 3511341713062188019,
+            :v => 2,
+            :op => 'u',
+            :ns => 'foo.bar',
+            :o2 => BSON::Document.new(:_id => BSON::ObjectId('583033a3643431ab5be6ec35')),
+            :o => BSON::Document.new('$set' => BSON::Document.new('bar' => 'quux'), '$unset' => BSON::Document.new('baz' => ''))
+          )
+          update = described_class.from(bson)
+
+          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = (jsonb_set(\"document\", ARRAY['bar'], '\"quux\"', true) #- ARRAY['baz']), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
+        end
+      end
+    end
   end
 end

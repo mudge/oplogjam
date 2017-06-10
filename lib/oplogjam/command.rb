@@ -35,5 +35,11 @@ module Oplogjam
 
       id == other.id
     end
+
+    def apply(_connection)
+    end
+
+    def to_sql
+    end
   end
 end

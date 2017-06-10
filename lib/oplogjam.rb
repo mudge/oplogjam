@@ -1,6 +1,13 @@
+require 'sequel'
 require 'oplogjam/operation'
+require 'oplogjam/oplog'
 
 module Oplogjam
+  DB = Sequel.connect('mock://postgres')
+  Sequel.extension :pg_json
+  Sequel.extension :pg_json_ops
+  Sequel.extension :pg_array
+
   def self.Timestamp(ts)
     raise TypeError, "#{ts} is not a BSON Timestamp" unless ts.is_a?(BSON::Timestamp)
 

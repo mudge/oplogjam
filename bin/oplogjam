@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+
+require 'oplogjam'
+require 'mongo'
+
+mongodb_uri, postgres_uri = ARGV
+
+mongodb = Mongo::Client.new(mongodb_uri)
+postgres = Sequel.connect(postgres_uri)
+
+Oplogjam::Oplog.new(mongodb).oplog.each do |operation|
+  puts operation.to_sql
+  operation.apply(postgres)
+end

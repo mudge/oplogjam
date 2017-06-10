@@ -99,5 +99,22 @@ module Oplogjam
         expect(delete.query).to eq(BSON::Document.new(:_id => BSON::ObjectId('582e287cfedf6fb051b2efdf')))
       end
     end
+
+    describe '#to_sql' do
+      it 'returns a SQL equivalent to the delete' do
+        bson = BSON::Document.new(
+          :ts => BSON::Timestamp.new(1479421186, 1),
+          :t => 1,
+          :h => -5457382347563537847,
+          :v => 2,
+          :op => 'd',
+          :ns => 'foo.bar',
+          :o => BSON::Document.new(:_id => BSON::ObjectId('582e287cfedf6fb051b2efdf'))
+        )
+        delete = described_class.from(bson)
+
+        expect(delete.to_sql).to eq('DELETE FROM "foo_bar" WHERE ("id" = \'582e287cfedf6fb051b2efdf\')')
+      end
+    end
   end
 end

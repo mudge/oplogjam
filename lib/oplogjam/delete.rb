@@ -35,5 +35,16 @@ module Oplogjam
 
       id == other.id
     end
+
+    def apply(connection)
+      connection[to_sql].delete
+    end
+
+    def to_sql
+      table_name = namespace.split('.', 2).join('_')
+      row_id = String(query.fetch('_id'))
+
+      DB.from(table_name).where(:id => row_id).delete_sql
+    end
   end
 end

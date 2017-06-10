@@ -38,5 +38,38 @@ module Oplogjam
 
       id == other.id
     end
+
+    def apply(connection)
+      connection[to_sql].update
+    end
+
+    def to_sql
+      table_name = namespace.split('.', 2).join('_')
+      row_id = String(query.fetch('_id'))
+      attributes = {
+        :document => unsets_to_jsonb(sets_to_jsonb),
+        :updated_at => Time.now.utc
+      }
+
+      DB.from(table_name).where(:id => row_id).update_sql(attributes)
+    end
+
+    private
+
+    def sets_to_jsonb(column = :document)
+      update.fetch('$set', {}).inject(column) do |target, (field, value)|
+        path = field.split('.')
+
+        Sequel.pg_jsonb(target).set(path, value.to_json)
+      end
+    end
+
+    def unsets_to_jsonb(column = :document)
+      update.fetch('$unset', {}).inject(column) do |target, (field, _)|
+        path = field.split('.')
+
+        Sequel.pg_jsonb(target).delete_path(path)
+      end
+    end
   end
 end

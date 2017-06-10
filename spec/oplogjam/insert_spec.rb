@@ -172,5 +172,27 @@ module Oplogjam
         expect(insert).to eq(another_insert)
       end
     end
+
+    describe '#to_sql' do
+      it 'returns an equivalent SQL insert' do
+        Timecop.freeze(Time.utc(2001)) do
+          bson = BSON::Document.new(
+            :ts => BSON::Timestamp.new(1496414570, 11),
+            :t => 14,
+            :h => -3028027288268436781,
+            :v => 2,
+            :op => 'i',
+            :ns => 'foo.bar',
+            :o => BSON::Document.new(
+              :_id => BSON::ObjectId('593bac55da605b0dbf3b25a5'),
+              :baz => 'quux'
+            )
+          )
+          insert = described_class.from(bson)
+
+          expect(insert.to_sql).to eq("INSERT INTO \"foo_bar\" (\"id\", \"document\", \"created_at\", \"updated_at\") VALUES ('593bac55da605b0dbf3b25a5', '{\"_id\":{\"$oid\":\"593bac55da605b0dbf3b25a5\"},\"baz\":\"quux\"}'::jsonb, '2001-01-01 00:00:00.000000+0000', '2001-01-01 00:00:00.000000+0000')")
+        end
+      end
+    end
   end
 end

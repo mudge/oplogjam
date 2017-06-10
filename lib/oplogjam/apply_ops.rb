@@ -33,5 +33,15 @@ module Oplogjam
     def operations
       apply_ops.map { |bson| Operation.from(bson) }
     end
+
+    def apply(connection)
+      operations.each do |operation|
+        operation.apply(connection)
+      end
+    end
+
+    def to_sql
+      operations.map { |operation| operation.to_sql }.join(';')
+    end
   end
 end

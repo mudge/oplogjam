@@ -35,5 +35,22 @@ module Oplogjam
 
       id == other.id
     end
+
+    def apply(connection)
+      connection[to_sql].insert
+    end
+
+    def to_sql
+      table_name = namespace.split('.', 2).join('_')
+      row_id = String(document.fetch('_id'))
+      attributes = {
+        :id => row_id,
+        :document => Sequel.pg_jsonb(document),
+        :created_at => Time.now.utc,
+        :updated_at => Time.now.utc
+      }
+
+      DB.from(table_name).insert_sql(attributes)
+    end
   end
 end
