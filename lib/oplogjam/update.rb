@@ -61,20 +61,37 @@ module Oplogjam
       unsets_to_jsonb(sets_to_jsonb)
     end
 
-    def sets_to_jsonb(column = :document)
+    def sets_to_jsonb(column = Sequel.pg_jsonb(:document))
       update.fetch('$set', {}).inject(column) do |target, (field, value)|
         path = field.split('.')
-        segments = []
+        next target.set(path, value.to_json) if path.size == 1
 
-        path.inject(target) { |expr, segment|
-          segments << segment
+        partial_path = []
 
-          Sequel.pg_jsonb(expr).set(segments.dup, {})
-        }.set(path, value.to_json)
+        path
+          .inject(target) { |expr, segment|
+            partial_path += [segment]
+            next expr if path == partial_path
+
+            # Set any intermediate keys to empty hashes if they don't already exist.
+            #
+            # e.g.
+            #
+            #     jsonb_set("document", ARRAY['a'], coalesce(("document" #> ARRAY['a']), '{}'::jsonb), true)
+            expr.set(
+              partial_path,
+              Sequel.function(
+                :coalesce,
+                Sequel.pg_jsonb(:document)[partial_path],
+                Sequel.pg_jsonb({})
+              )
+            )
+          }
+          .set(path, value.to_json)
       end
     end
 
-    def unsets_to_jsonb(column = :document)
+    def unsets_to_jsonb(column = Sequel.pg_jsonb(:document))
       update.fetch('$unset', {}).inject(column) do |target, (field, _)|
         path = field.split('.')
 
