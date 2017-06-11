@@ -34,13 +34,7 @@ module Oplogjam
         self
           .class
           .new(value)
-          .to_sql(
-            subject
-              .set(
-                field,
-                Sequel.function(:coalesce, subject[field], Sequel.pg_jsonb({}))
-              )
-          )
+          .to_sql(subject.set(field, Sequel.function(:coalesce, subject[field], Sequel.pg_jsonb({}))))
       end
     end
 

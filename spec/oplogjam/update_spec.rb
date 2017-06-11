@@ -121,7 +121,7 @@ module Oplogjam
           )
           update = described_class.from(bson)
 
-          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = jsonb_set(\"document\", ARRAY['bar'], '\"baz\"', true), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
+          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = jsonb_set(\"document\", ARRAY['bar'], '\"baz\"', true), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE ((\"id\" = '583033a3643431ab5be6ec35') AND (\"deleted_at\" IS NULL))")
         end
       end
 
@@ -139,7 +139,7 @@ module Oplogjam
           )
           update = described_class.from(bson)
 
-          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = jsonb_set(jsonb_set(\"document\", ARRAY['bar'], coalesce((\"document\" #> ARRAY['bar']), '{}'::jsonb), true), ARRAY['bar','baz'], '\"quux\"', true), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
+          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = jsonb_set(jsonb_set(\"document\", ARRAY['bar'], coalesce((\"document\" #> ARRAY['bar']), '{}'::jsonb), true), ARRAY['bar','baz'], '\"quux\"', true), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE ((\"id\" = '583033a3643431ab5be6ec35') AND (\"deleted_at\" IS NULL))")
         end
       end
 
@@ -157,7 +157,7 @@ module Oplogjam
           )
           update = described_class.from(bson)
 
-          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = jsonb_set(jsonb_set(jsonb_set(jsonb_set(\"document\", ARRAY['a'], coalesce((\"document\" #> ARRAY['a']), '{}'::jsonb), true), ARRAY['a','b'], coalesce((jsonb_set(\"document\", ARRAY['a'], coalesce((\"document\" #> ARRAY['a']), '{}'::jsonb), true) #> ARRAY['a','b']), '{}'::jsonb), true), ARRAY['a','b','c'], '1', true), ARRAY['a','b','d'], '2', true), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
+          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = jsonb_set(jsonb_set(jsonb_set(jsonb_set(\"document\", ARRAY['a'], coalesce((\"document\" #> ARRAY['a']), '{}'::jsonb), true), ARRAY['a','b'], coalesce((jsonb_set(\"document\", ARRAY['a'], coalesce((\"document\" #> ARRAY['a']), '{}'::jsonb), true) #> ARRAY['a','b']), '{}'::jsonb), true), ARRAY['a','b','c'], '1', true), ARRAY['a','b','d'], '2', true), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE ((\"id\" = '583033a3643431ab5be6ec35') AND (\"deleted_at\" IS NULL))")
         end
       end
 
@@ -175,7 +175,7 @@ module Oplogjam
           )
           update = described_class.from(bson)
 
-          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = jsonb_set(jsonb_set(jsonb_set(\"document\", ARRAY['bar'], coalesce((\"document\" #> ARRAY['bar']), '{}'::jsonb), true), ARRAY['bar','baz'], coalesce((jsonb_set(\"document\", ARRAY['bar'], coalesce((\"document\" #> ARRAY['bar']), '{}'::jsonb), true) #> ARRAY['bar','baz']), '{}'::jsonb), true), ARRAY['bar','baz','quux'], '\"quuz\"', true), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
+          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = jsonb_set(jsonb_set(jsonb_set(\"document\", ARRAY['bar'], coalesce((\"document\" #> ARRAY['bar']), '{}'::jsonb), true), ARRAY['bar','baz'], coalesce((jsonb_set(\"document\", ARRAY['bar'], coalesce((\"document\" #> ARRAY['bar']), '{}'::jsonb), true) #> ARRAY['bar','baz']), '{}'::jsonb), true), ARRAY['bar','baz','quux'], '\"quuz\"', true), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE ((\"id\" = '583033a3643431ab5be6ec35') AND (\"deleted_at\" IS NULL))")
         end
       end
 
@@ -193,7 +193,7 @@ module Oplogjam
           )
           update = described_class.from(bson)
 
-          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = jsonb_set(jsonb_set(jsonb_set(\"document\", ARRAY['bar'], coalesce((\"document\" #> ARRAY['bar']), '{}'::jsonb), true), ARRAY['bar','baz'], coalesce((jsonb_set(\"document\", ARRAY['bar'], coalesce((\"document\" #> ARRAY['bar']), '{}'::jsonb), true) #> ARRAY['bar','baz']), '{}'::jsonb), true), ARRAY['bar','baz','1'], '\"quuz\"', true), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
+          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = jsonb_set(jsonb_set(jsonb_set(\"document\", ARRAY['bar'], coalesce((\"document\" #> ARRAY['bar']), '{}'::jsonb), true), ARRAY['bar','baz'], coalesce((jsonb_set(\"document\", ARRAY['bar'], coalesce((\"document\" #> ARRAY['bar']), '{}'::jsonb), true) #> ARRAY['bar','baz']), '{}'::jsonb), true), ARRAY['bar','baz','1'], '\"quuz\"', true), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE ((\"id\" = '583033a3643431ab5be6ec35') AND (\"deleted_at\" IS NULL))")
         end
       end
 
@@ -211,7 +211,7 @@ module Oplogjam
           )
           update = described_class.from(bson)
 
-          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = jsonb_set(jsonb_set(\"document\", ARRAY['bar'], '\"baz\"', true), ARRAY['baz'], '\"quux\"', true), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
+          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = jsonb_set(jsonb_set(\"document\", ARRAY['bar'], '\"baz\"', true), ARRAY['baz'], '\"quux\"', true), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE ((\"id\" = '583033a3643431ab5be6ec35') AND (\"deleted_at\" IS NULL))")
         end
       end
 
@@ -229,7 +229,7 @@ module Oplogjam
           )
           update = described_class.from(bson)
 
-          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = (\"document\" #- ARRAY['bar']), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
+          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = (\"document\" #- ARRAY['bar']), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE ((\"id\" = '583033a3643431ab5be6ec35') AND (\"deleted_at\" IS NULL))")
         end
       end
 
@@ -247,7 +247,7 @@ module Oplogjam
           )
           update = described_class.from(bson)
 
-          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = ((\"document\" #- ARRAY['bar']) #- ARRAY['baz']), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
+          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = ((\"document\" #- ARRAY['bar']) #- ARRAY['baz']), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE ((\"id\" = '583033a3643431ab5be6ec35') AND (\"deleted_at\" IS NULL))")
         end
       end
 
@@ -265,7 +265,7 @@ module Oplogjam
           )
           update = described_class.from(bson)
 
-          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = (jsonb_set(\"document\", ARRAY['bar'], '\"quux\"', true) #- ARRAY['baz']), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
+          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = (jsonb_set(\"document\", ARRAY['bar'], '\"quux\"', true) #- ARRAY['baz']), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE ((\"id\" = '583033a3643431ab5be6ec35') AND (\"deleted_at\" IS NULL))")
         end
       end
 
@@ -283,7 +283,7 @@ module Oplogjam
           )
           update = described_class.from(bson)
 
-          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = '{\"_id\":{\"$oid\":\"583033a3643431ab5be6ec35\"},\"bar\":\"baz\"}'::jsonb, \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
+          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = '{\"_id\":{\"$oid\":\"583033a3643431ab5be6ec35\"},\"bar\":\"baz\"}'::jsonb, \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE ((\"id\" = '583033a3643431ab5be6ec35') AND (\"deleted_at\" IS NULL))")
         end
       end
     end

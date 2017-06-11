@@ -49,7 +49,7 @@ module Oplogjam
 
       DB
         .from(table_name)
-        .where(id: row_id)
+        .where(id: row_id, deleted_at: nil)
         .update_sql(document: jsonb_update, updated_at: Time.now.utc)
     end
 
