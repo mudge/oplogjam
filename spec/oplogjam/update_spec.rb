@@ -143,6 +143,24 @@ module Oplogjam
         end
       end
 
+      it 'supports multiple nested field updates efficiently' do
+        Timecop.freeze(Time.utc(2001)) do
+          bson = BSON::Document.new(
+            ts: BSON::Timestamp.new(1_479_561_033, 1),
+            t: 2,
+            h: 3_511_341_713_062_188_019,
+            v: 2,
+            op: 'u',
+            ns: 'foo.bar',
+            o2: BSON::Document.new(_id: BSON::ObjectId('583033a3643431ab5be6ec35')),
+            o: BSON::Document.new('$set' => BSON::Document.new('a.b.c' => 1, 'a.b.d' => 2))
+          )
+          update = described_class.from(bson)
+
+          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = jsonb_set(jsonb_set(jsonb_set(jsonb_set(\"document\", ARRAY['a'], coalesce((\"document\" #> ARRAY['a']), '{}'::jsonb), true), ARRAY['a','b'], coalesce((jsonb_set(\"document\", ARRAY['a'], coalesce((\"document\" #> ARRAY['a']), '{}'::jsonb), true) #> ARRAY['a','b']), '{}'::jsonb), true), ARRAY['a','b','c'], '1', true), ARRAY['a','b','d'], '2', true), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
+        end
+      end
+
       it 'supports deeply nested field updates' do
         Timecop.freeze(Time.utc(2001)) do
           bson = BSON::Document.new(

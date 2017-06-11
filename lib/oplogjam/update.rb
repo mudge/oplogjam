@@ -62,29 +62,9 @@ module Oplogjam
     end
 
     def sets_to_jsonb(column = Sequel.pg_jsonb(:document))
-      update.fetch('$set', {}).inject(column) do |target, (field, value)|
-        path = field.split('.')
-        next target.set(path, value.to_json) if path.size == 1
+      return column unless update.key?('$set')
 
-        partial_path = []
-
-        path
-          .inject(target) { |expr, segment|
-            partial_path += [segment]
-            next expr if path == partial_path
-
-            # Set any intermediate keys to empty hashes if they don't already exist.
-            #
-            # e.g.
-            #
-            #     jsonb_set("document", ARRAY['a'], coalesce(("document" #> ARRAY['a']), '{}'::jsonb), true)
-            expr.set(
-              partial_path,
-              Sequel.function(:coalesce, expr[partial_path], Sequel.pg_jsonb({}))
-            )
-          }
-          .set(partial_path, value.to_json)
-      end
+      Set.from(update.fetch('$set')).to_sql(column)
     end
 
     def unsets_to_jsonb(column = Sequel.pg_jsonb(:document))
