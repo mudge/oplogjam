@@ -157,7 +157,25 @@ module Oplogjam
           )
           update = described_class.from(bson)
 
-          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = jsonb_set(jsonb_set(jsonb_set(\"document\", ARRAY['bar'], coalesce((\"document\" #> ARRAY['bar']), '{}'::jsonb), true), ARRAY['bar','baz'], coalesce((\"document\" #> ARRAY['bar','baz']), '{}'::jsonb), true), ARRAY['bar','baz','quux'], '\"quuz\"', true), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
+          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = jsonb_set(jsonb_set(jsonb_set(\"document\", ARRAY['bar'], coalesce((\"document\" #> ARRAY['bar']), '{}'::jsonb), true), ARRAY['bar','baz'], coalesce((jsonb_set(\"document\", ARRAY['bar'], coalesce((\"document\" #> ARRAY['bar']), '{}'::jsonb), true) #> ARRAY['bar','baz']), '{}'::jsonb), true), ARRAY['bar','baz','quux'], '\"quuz\"', true), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
+        end
+      end
+
+      it 'supports nested field updates with indices' do
+        Timecop.freeze(Time.utc(2001)) do
+          bson = BSON::Document.new(
+            ts: BSON::Timestamp.new(1_479_561_033, 1),
+            t: 2,
+            h: 3_511_341_713_062_188_019,
+            v: 2,
+            op: 'u',
+            ns: 'foo.bar',
+            o2: BSON::Document.new(_id: BSON::ObjectId('583033a3643431ab5be6ec35')),
+            o: BSON::Document.new('$set' => BSON::Document.new('bar.baz.1' => 'quuz'))
+          )
+          update = described_class.from(bson)
+
+          expect(update.to_sql).to eq("UPDATE \"foo_bar\" SET \"document\" = jsonb_set(jsonb_set(jsonb_set(\"document\", ARRAY['bar'], coalesce((\"document\" #> ARRAY['bar']), '{}'::jsonb), true), ARRAY['bar','baz'], coalesce((jsonb_set(\"document\", ARRAY['bar'], coalesce((\"document\" #> ARRAY['bar']), '{}'::jsonb), true) #> ARRAY['bar','baz']), '{}'::jsonb), true), ARRAY['bar','baz','1'], '\"quuz\"', true), \"updated_at\" = '2001-01-01 00:00:00.000000+0000' WHERE (\"id\" = '583033a3643431ab5be6ec35')")
         end
       end
 

@@ -80,14 +80,10 @@ module Oplogjam
             #     jsonb_set("document", ARRAY['a'], coalesce(("document" #> ARRAY['a']), '{}'::jsonb), true)
             expr.set(
               partial_path,
-              Sequel.function(
-                :coalesce,
-                Sequel.pg_jsonb(:document)[partial_path],
-                Sequel.pg_jsonb({})
-              )
+              Sequel.function(:coalesce, expr[partial_path], Sequel.pg_jsonb({}))
             )
           }
-          .set(path, value.to_json)
+          .set(partial_path, value.to_json)
       end
     end
 
