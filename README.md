@@ -13,7 +13,7 @@ This currently expects to write a MongoDB collection `bar` from the database
    Column   |            Type             |              Modifiers
 ------------+-----------------------------+-------------------------------------
  uuid       | uuid                        | not null default uuid_generate_v4()
- id         | text                        | not null
+ id         | jsonb                       | not null
  document   | jsonb                       | not null
  created_at | timestamp without time zone |
  updated_at | timestamp without time zone |
@@ -21,6 +21,16 @@ This currently expects to write a MongoDB collection `bar` from the database
 Indexes:
     "foo_bar_pkey" PRIMARY KEY, btree (uuid)
     "foo_bar_id_deleted_at_key" UNIQUE CONSTRAINT, btree (id, deleted_at)
+```
+
+It also expects to write progress into a table in PostgreSQL called `oplogjam` with the following schema:
+
+```
+    Table "public.oplogjam"
+  Column   |  Type  | Modifiers
+-----------+--------+-----------
+ seconds   | bigint |
+ increment | bigint |
 ```
 
 ## License
