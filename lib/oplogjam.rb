@@ -2,6 +2,7 @@ require 'sequel'
 require 'oplogjam/operation'
 require 'oplogjam/oplog'
 require 'oplogjam/set'
+require 'oplogjam/progress'
 
 module Oplogjam
   DB = Sequel.connect('mock://postgres')

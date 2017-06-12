@@ -8,10 +8,14 @@ module Oplogjam
       @client = client
     end
 
-    def oplog(query = {})
-      cursor = client.use('local')['oplog.rs'].find(query, timeout: false, cursor_type: :tailable_await)
+    def since(progress)
+      operations('ts' => { '$gt' => progress.latest })
+    end
 
+    def operations(query = {})
       Enumerator.new do |yielder|
+        cursor = client.use('local')['oplog.rs'].find(query, cursor_type: :tailable_await).no_cursor_timeout
+
         cursor.each do |document|
           yielder << Operation.from(document)
         end

@@ -6,23 +6,19 @@ require 'mongo'
 mongodb_uri, postgres_uri = ARGV
 
 mongodb = Mongo::Client.new(mongodb_uri)
-postgres = Sequel.connect(postgres_uri)
 oplog = Oplogjam::Oplog.new(mongodb)
 
-postgres.from(:oplogjam).insert(seconds: 0, increment: 0) if postgres.from(:oplogjam).empty?
-
-def query(postgres)
-  progress = postgres.from(:oplogjam).first
-  return {} unless progress
-
-  { 'ts' => { '$gt' => BSON::Timestamp.new(progress.fetch(:seconds), progress.fetch(:increment)) } }
-end
+postgres = Sequel.connect(postgres_uri)
+progress = Oplogjam::Progress.new(postgres)
 
 begin
-  oplog.oplog(query(postgres)).each do |operation|
-    puts operation.to_sql
-    operation.apply(postgres)
-    postgres.from(:oplogjam).update(seconds: operation.ts.seconds, increment: operation.ts.increment)
+  oplog.since(progress).each do |operation|
+    $stdout << '.'
+
+    postgres.transaction do
+      operation.apply(postgres)
+      progress.record(operation)
+    end
   end
 rescue => e
   $stderr.puts "Something went wrong, retrying: #{e}"
