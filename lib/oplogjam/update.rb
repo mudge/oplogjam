@@ -1,3 +1,6 @@
+require 'oplogjam/set'
+require 'oplogjam/unset'
+
 module Oplogjam
   InvalidUpdate = Class.new(ArgumentError)
 
@@ -68,11 +71,9 @@ module Oplogjam
     end
 
     def unsets_to_jsonb(column = Sequel.pg_jsonb(:document))
-      update.fetch('$unset', {}).inject(column) do |target, (field, _)|
-        path = field.split('.')
+      return column unless update.key?('$unset')
 
-        Sequel.pg_jsonb(target).delete_path(path)
-      end
+      Unset.from(update.fetch('$unset')).delete(column)
     end
   end
 end
