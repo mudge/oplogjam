@@ -64,7 +64,7 @@ module Oplogjam
     def sets_to_jsonb(column = Sequel.pg_jsonb(:document))
       return column unless update.key?('$set')
 
-      Set.from(update.fetch('$set')).to_sql(column)
+      Set.from(update.fetch('$set')).update(column)
     end
 
     def unsets_to_jsonb(column = Sequel.pg_jsonb(:document))

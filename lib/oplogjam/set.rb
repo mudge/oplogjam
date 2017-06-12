@@ -1,47 +1,101 @@
 module Oplogjam
   class Set
-    attr_reader :root
+    attr_reader :tree
 
-    def self.from(set)
-      root = set.each_with_object({}) do |(dotted_path, value), tree|
-        path_segments = dotted_path.split('.')
+    def initialize(tree = {})
+      @tree = tree
+    end
+
+    def populate(path)
+      tree[path] ||= Intermediate.new(path)
+    end
+
+    def set(path, value)
+      tree[path] = Assignment.new(path, value)
+    end
+
+    def update(column)
+      nodes.inject(column) do |subject, node|
+        node.update(subject)
+      end
+    end
+
+    def nodes
+      tree.values
+    end
+
+    def self.from(operation)
+      set = new
+      operation.each do |dotted_path, value|
+
+        # Split the dotted path `a.b.c` into an array `['a', 'b', 'c']`
+        path = dotted_path.split('.')
         current_path = []
 
-        path_segments.inject(tree) do |acc, path_segment|
-          current_path += [path_segment]
+        # Start by populating the top-level set
+        current_node = set
 
-          if path_segment == path_segments.last
-            acc[current_path] = value
-          else
-            acc[current_path] ||= {}
-          end
+        # Go through the successive path segments, building up intermediate paths
+        # ['a'], ['a', 'b']
+        #
+        # Note that we exclude the final path segment as that will be used below in a separate set phase and that we
+        # must not mutate current_path in place (e.g. by using <<) as references to it will live on in node definitions.
+        path[0...-1].each do |segment|
+          current_path += [segment]
 
-          acc[current_path]
+          # Populate an empty intermediate if need be, updating the current node so further traversal uses that as a
+          # base
+          current_node = current_node.populate(current_path)
         end
+
+        # Set the final value on the full path
+        current_node.set(path, value)
       end
 
-      new(root)
+      # Return the finally populated set
+      set
+    end
+  end
+
+  class Intermediate
+    attr_reader :path, :tree
+
+    def initialize(path, tree = {})
+      @path = path
+      @tree = tree
     end
 
-    def initialize(root)
-      @root = root
+    def populate(path)
+      tree[path] ||= Intermediate.new(path)
     end
 
-    def to_sql(column)
-      root.inject(column) do |subject, (field, value)|
-        next subject.set(field, value.to_json) unless value.is_a?(Hash)
+    def set(path, value)
+      tree[path] = Assignment.new(path, value)
+    end
 
-        self
-          .class
-          .new(value)
-          .to_sql(subject.set(field, Sequel.function(:coalesce, subject[field], Sequel.pg_jsonb({}))))
+    def update(column)
+      populated_column = column.set(path, Sequel.function(:coalesce, column[path], Sequel.pg_jsonb({})))
+
+      nodes.inject(populated_column) do |subject, node|
+        node.update(subject)
       end
     end
 
-    def ==(other)
-      return false unless other.is_a?(Set)
+    def nodes
+      tree.values
+    end
+  end
 
-      root == other.root
+  class Assignment
+    attr_reader :path, :value
+
+    def initialize(path, value)
+      @path = path
+      @value = value
+    end
+
+    def update(column)
+      column.set(path, value.to_json)
     end
   end
 end
