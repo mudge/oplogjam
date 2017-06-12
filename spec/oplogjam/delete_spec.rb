@@ -114,7 +114,7 @@ module Oplogjam
           )
           delete = described_class.from(bson)
 
-          expect(delete.to_sql).to eq("UPDATE \"foo_bar\" SET \"deleted_at\" = '2001-01-01 00:00:00.000000+0000' WHERE ((\"id\" = '582e287cfedf6fb051b2efdf') AND (\"deleted_at\" IS NULL))")
+          expect(delete.to_sql).to eq("UPDATE \"foo_bar\" SET \"deleted_at\" = '2001-01-01 00:00:00.000000+0000' WHERE ((\"id\" = '{\"$oid\":\"582e287cfedf6fb051b2efdf\"}') AND (\"deleted_at\" IS NULL))")
         end
       end
     end

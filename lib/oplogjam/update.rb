@@ -45,7 +45,7 @@ module Oplogjam
 
     def to_sql
       table_name = namespace.split('.', 2).join('_')
-      row_id = String(query.fetch('_id'))
+      row_id = query.fetch('_id').to_json
 
       DB
         .from(table_name)

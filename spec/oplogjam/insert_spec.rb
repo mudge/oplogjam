@@ -190,7 +190,7 @@ module Oplogjam
           )
           insert = described_class.from(bson)
 
-          expect(insert.to_sql).to eq("INSERT INTO \"foo_bar\" (\"id\", \"document\", \"created_at\", \"updated_at\") VALUES ('593bac55da605b0dbf3b25a5', '{\"_id\":{\"$oid\":\"593bac55da605b0dbf3b25a5\"},\"baz\":\"quux\"}'::jsonb, '2001-01-01 00:00:00.000000+0000', '2001-01-01 00:00:00.000000+0000')")
+          expect(insert.to_sql).to eq("INSERT INTO \"foo_bar\" (\"id\", \"document\", \"created_at\", \"updated_at\") VALUES ('{\"$oid\":\"593bac55da605b0dbf3b25a5\"}', '{\"_id\":{\"$oid\":\"593bac55da605b0dbf3b25a5\"},\"baz\":\"quux\"}'::jsonb, '2001-01-01 00:00:00.000000+0000', '2001-01-01 00:00:00.000000+0000')")
         end
       end
     end
