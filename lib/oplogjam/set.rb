@@ -1,10 +1,12 @@
+require 'oplogjam/jsonb'
+
 module Oplogjam
   class Set
     def self.from(operation)
       operation.each_with_object(new) do |(dotted_path, value), set|
 
         # Split the dotted path `a.b.c` into an array `['a', 'b', 'c']`
-        path = dotted_path.split('.')
+        path = dotted_path.split('.'.freeze)
         current_path = []
 
         # Start by populating the top-level set

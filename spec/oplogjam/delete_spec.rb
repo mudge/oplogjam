@@ -99,24 +99,5 @@ module Oplogjam
         expect(delete.query).to eq(BSON::Document.new(_id: BSON::ObjectId('582e287cfedf6fb051b2efdf')))
       end
     end
-
-    describe '#to_sql' do
-      it 'returns SQL to soft delete this record' do
-        Timecop.freeze(Time.utc(2001)) do
-          bson = BSON::Document.new(
-            ts: BSON::Timestamp.new(1_479_421_186, 1),
-            t: 1,
-            h: -5_457_382_347_563_537_847,
-            v: 2,
-            op: 'd',
-            ns: 'foo.bar',
-            o: BSON::Document.new(_id: BSON::ObjectId('582e287cfedf6fb051b2efdf'))
-          )
-          delete = described_class.from(bson)
-
-          expect(delete.to_sql).to eq("UPDATE \"foo_bar\" SET \"deleted_at\" = '2001-01-01 00:00:00.000000+0000' WHERE ((\"id\" = '{\"$oid\":\"582e287cfedf6fb051b2efdf\"}') AND (\"deleted_at\" IS NULL))")
-        end
-      end
-    end
   end
 end

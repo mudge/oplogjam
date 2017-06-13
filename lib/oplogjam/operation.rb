@@ -10,15 +10,15 @@ module Oplogjam
 
   class Operation
     def self.from(bson)
-      op = bson.fetch('op', 'unknown')
+      op = bson.fetch('op'.freeze, 'unknown'.freeze)
 
       case op
-      when 'n' then Noop.from(bson)
-      when 'i' then Insert.from(bson)
-      when 'u' then Update.from(bson)
-      when 'd' then Delete.from(bson)
-      when 'c'
-        if bson.fetch('o', {}).key?('applyOps')
+      when 'n'.freeze then Noop.from(bson)
+      when 'i'.freeze then Insert.from(bson)
+      when 'u'.freeze then Update.from(bson)
+      when 'd'.freeze then Delete.from(bson)
+      when 'c'.freeze
+        if bson.fetch('o'.freeze, {}).key?('applyOps'.freeze)
           ApplyOps.from(bson)
         else
           Command.from(bson)

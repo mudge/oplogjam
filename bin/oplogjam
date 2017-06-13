@@ -1,27 +1,38 @@
 #!/usr/bin/env ruby
 
-require 'oplogjam'
+require 'logger'
+require 'yaml'
 require 'mongo'
+require 'oplogjam'
 
-mongodb_uri, postgres_uri = ARGV
+mongodb_uri, postgres_uri, config = ARGV
+
+logger = Logger.new(STDOUT)
+logger.info('oplogjam'.freeze) { "Connecting to MongoDB at #{mongodb_uri}" }
 
 mongodb = Mongo::Client.new(mongodb_uri)
 oplog = Oplogjam::Oplog.new(mongodb)
 
+logger.info('oplogjam'.freeze) { "Connecting to PostgreSQL at #{postgres_uri}" }
 postgres = Sequel.connect(postgres_uri)
-progress = Oplogjam::Progress.new(postgres)
+
+logger.info('oplogjam'.freeze) { "Reading configuration from #{config}" }
+config = Oplogjam::Configuration.new(postgres).load(YAML.load_file(config))
+
+progress = config.progress
+mapping = config.mapping
 
 begin
   oplog.since(progress).each do |operation|
-    $stdout << '.'
-
     postgres.transaction do
-      operation.apply(postgres)
+      operation.apply(mapping)
+
+      logger.debug('oplogjam'.freeze) { "Recording #{operation.timestamp}" }
       progress.record(operation)
     end
   end
 rescue => e
-  $stderr.puts "Something went wrong, retrying: #{e}"
+  logger.error('oplogjam'.freeze) { "Something went wrong when tailing, retrying: #{e}" }
 
   retry
 end

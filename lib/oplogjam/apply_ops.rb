@@ -1,3 +1,5 @@
+require 'oplogjam/types'
+
 module Oplogjam
   InvalidApplyOps = Class.new(ArgumentError)
 
@@ -5,11 +7,11 @@ module Oplogjam
     attr_reader :h, :ts, :ns, :apply_ops
 
     def self.from(bson)
-      h = bson.fetch('h')
-      ts = bson.fetch('ts')
-      ns = bson.fetch('ns')
-      o = bson.fetch('o')
-      apply_ops = o.fetch('applyOps')
+      h = bson.fetch('h'.freeze)
+      ts = bson.fetch('ts'.freeze)
+      ns = bson.fetch('ns'.freeze)
+      o = bson.fetch('o'.freeze)
+      apply_ops = o.fetch('applyOps'.freeze)
 
       new(h, ts, ns, apply_ops)
     rescue KeyError => e
@@ -30,14 +32,20 @@ module Oplogjam
       Time.at(ts.seconds, ts.increment)
     end
 
+    def apply(mapping)
+      operations.each do |operation|
+        operation.apply(mapping)
+      end
+    end
+
     def operations
       apply_ops.map { |bson| Operation.from(bson) }
     end
 
-    def apply(connection)
-      operations.each do |operation|
-        operation.apply(connection)
-      end
+    def ==(other)
+      return unless other.is_a?(ApplyOps)
+
+      id == other.id
     end
   end
 end

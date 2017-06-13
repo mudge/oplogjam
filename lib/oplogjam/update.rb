@@ -1,4 +1,6 @@
+require 'oplogjam/jsonb'
 require 'oplogjam/set'
+require 'oplogjam/types'
 require 'oplogjam/unset'
 
 module Oplogjam
@@ -8,11 +10,11 @@ module Oplogjam
     attr_reader :h, :ts, :ns, :o2, :o
 
     def self.from(bson)
-      h = bson.fetch('h')
-      ts = bson.fetch('ts')
-      ns = bson.fetch('ns')
-      o2 = bson.fetch('o2')
-      o = bson.fetch('o')
+      h = bson.fetch('h'.freeze)
+      ts = bson.fetch('ts'.freeze)
+      ns = bson.fetch('ns'.freeze)
+      o2 = bson.fetch('o2'.freeze)
+      o = bson.fetch('o'.freeze)
 
       new(h, ts, ns, o2, o)
     rescue KeyError => e
@@ -42,18 +44,13 @@ module Oplogjam
       id == other.id
     end
 
-    def apply(connection)
-      connection[to_sql].update
-    end
+    def apply(mapping)
+      table = mapping.get(namespace)
+      row_id = query.fetch('_id'.freeze).to_json
 
-    def to_sql
-      table_name = namespace.split('.', 2).join('_')
-      row_id = query.fetch('_id').to_json
-
-      DB
-        .from(table_name)
+      table
         .where(id: row_id, deleted_at: nil)
-        .update_sql(document: jsonb_update, updated_at: Time.now.utc)
+        .update(document: jsonb_update, updated_at: Time.now.utc)
     end
 
     private
@@ -65,19 +62,19 @@ module Oplogjam
     end
 
     def sets_to_jsonb(column)
-      return column unless update.key?('$set')
+      return column unless update.key?('$set'.freeze)
 
-      Set.from(update.fetch('$set')).update(column)
+      Set.from(update.fetch('$set'.freeze)).update(column)
     end
 
     def unsets_to_jsonb(column)
-      return column unless update.key?('$unset')
+      return column unless update.key?('$unset'.freeze)
 
-      Unset.from(update.fetch('$unset')).delete(column)
+      Unset.from(update.fetch('$unset'.freeze)).delete(column)
     end
 
     def replacement?
-      !update.key?('$set') && !update.key?('$unset')
+      !update.key?('$set'.freeze) && !update.key?('$unset'.freeze)
     end
   end
 end

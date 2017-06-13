@@ -1,3 +1,5 @@
+require 'oplogjam/types'
+
 module Oplogjam
   InvalidCommand = Class.new(ArgumentError)
 
@@ -5,10 +7,10 @@ module Oplogjam
     attr_reader :h, :ts, :ns, :o
 
     def self.from(bson)
-      h = bson.fetch('h')
-      ts = bson.fetch('ts')
-      ns = bson.fetch('ns')
-      o = bson.fetch('o')
+      h = bson.fetch('h'.freeze)
+      ts = bson.fetch('ts'.freeze)
+      ns = bson.fetch('ns'.freeze)
+      o = bson.fetch('o'.freeze)
 
       new(h, ts, ns, o)
     rescue KeyError => e
@@ -36,6 +38,6 @@ module Oplogjam
       id == other.id
     end
 
-    def apply(_connection); end
+    def apply(_mapping); end
   end
 end

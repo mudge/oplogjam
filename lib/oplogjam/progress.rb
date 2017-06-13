@@ -2,29 +2,29 @@ require 'bson'
 
 module Oplogjam
   class Progress
-    attr_reader :db
+    attr_reader :table
 
-    def initialize(db)
-      @db = db
+    def initialize(table)
+      @table = table
     end
 
     def latest
       populate
-      row = db.from(:oplogjam).first
+      row = table.first
 
       BSON::Timestamp.new(*row.values_at(:seconds, :increment))
     end
 
     def populate
-      return unless db.from(:oplogjam).empty?
+      return unless table.empty?
 
-      db.from(:oplogjam).insert(seconds: 0, increment: 0)
+      table.insert(seconds: 0, increment: 0)
     end
 
     def record(operation)
       ts = operation.ts
 
-      db.from(:oplogjam).update(seconds: ts.seconds, increment: ts.increment)
+      table.update(seconds: ts.seconds, increment: ts.increment)
     end
   end
 end

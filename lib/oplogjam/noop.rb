@@ -1,3 +1,5 @@
+require 'oplogjam/types'
+
 module Oplogjam
   InvalidNoop = Class.new(ArgumentError)
 
@@ -5,10 +7,10 @@ module Oplogjam
     attr_reader :h, :ts, :msg
 
     def self.from(bson)
-      h = bson.fetch('h')
-      ts = bson.fetch('ts')
-      o = bson.fetch('o')
-      msg = o.fetch('msg')
+      h = bson.fetch('h'.freeze)
+      ts = bson.fetch('ts'.freeze)
+      o = bson.fetch('o'.freeze)
+      msg = o.fetch('msg'.freeze)
 
       new(h, ts, msg)
     rescue KeyError => e
@@ -34,6 +36,6 @@ module Oplogjam
       id == other.id
     end
 
-    def apply(_connection); end
+    def apply(_mapping); end
   end
 end

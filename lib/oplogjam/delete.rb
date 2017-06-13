@@ -1,3 +1,5 @@
+require 'oplogjam/types'
+
 module Oplogjam
   InvalidDelete = Class.new(ArgumentError)
 
@@ -5,10 +7,10 @@ module Oplogjam
     attr_reader :h, :ts, :ns, :o
 
     def self.from(bson)
-      h = bson.fetch('h')
-      ts = bson.fetch('ts')
-      ns = bson.fetch('ns')
-      o = bson.fetch('o')
+      h = bson.fetch('h'.freeze)
+      ts = bson.fetch('ts'.freeze)
+      ns = bson.fetch('ns'.freeze)
+      o = bson.fetch('o'.freeze)
 
       new(h, ts, ns, o)
     rescue KeyError => e
@@ -36,18 +38,13 @@ module Oplogjam
       id == other.id
     end
 
-    def apply(connection)
-      connection[to_sql].delete
-    end
+    def apply(mapping)
+      table = mapping.get(namespace)
+      row_id = query.fetch('_id'.freeze).to_json
 
-    def to_sql
-      table_name = namespace.split('.', 2).join('_')
-      row_id = query.fetch('_id').to_json
-
-      DB
-        .from(table_name)
+      table
         .where(id: row_id, deleted_at: nil)
-        .update_sql(deleted_at: Time.now.utc)
+        .update(deleted_at: Time.now.utc)
     end
   end
 end

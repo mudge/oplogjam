@@ -2,7 +2,7 @@ module Oplogjam
   class Unset
     def self.from(operation)
       operation.each_with_object(new) do |(dotted_path, _), unset|
-        path = dotted_path.split('.')
+        path = dotted_path.split('.'.freeze)
 
         if path.last =~ /\A\d+\z/
           unset.unset_index(path)
@@ -53,7 +53,7 @@ module Oplogjam
     end
 
     def delete(column)
-      column.set(path, 'null')
+      column.set(path, 'null'.freeze)
     end
   end
 end
