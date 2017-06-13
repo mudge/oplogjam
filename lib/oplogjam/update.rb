@@ -59,21 +59,25 @@ module Oplogjam
     private
 
     def jsonb_update
-      return Sequel.pg_jsonb(update) unless update.key?('$set') || update.key?('$unset')
+      return Sequel.pg_jsonb(update) if replacement?
 
-      unsets_to_jsonb(sets_to_jsonb)
+      unsets_to_jsonb(sets_to_jsonb(Sequel.pg_jsonb(:document)))
     end
 
-    def sets_to_jsonb(column = Sequel.pg_jsonb(:document))
+    def sets_to_jsonb(column)
       return column unless update.key?('$set')
 
       Set.from(update.fetch('$set')).update(column)
     end
 
-    def unsets_to_jsonb(column = Sequel.pg_jsonb(:document))
+    def unsets_to_jsonb(column)
       return column unless update.key?('$unset')
 
       Unset.from(update.fetch('$unset')).delete(column)
+    end
+
+    def replacement?
+      !update.key?('$set') && !update.key?('$unset')
     end
   end
 end

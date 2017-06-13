@@ -39,9 +39,5 @@ module Oplogjam
         operation.apply(connection)
       end
     end
-
-    def to_sql
-      operations.map(&:to_sql).join(';')
-    end
   end
 end

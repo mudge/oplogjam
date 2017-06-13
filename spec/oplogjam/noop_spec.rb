@@ -119,21 +119,5 @@ module Oplogjam
         expect(noop).to eq(another_noop)
       end
     end
-
-    describe '#to_sql' do
-      it 'returns nil' do
-        bson = BSON::Document.new(
-          ts: BSON::Timestamp.new(1_479_419_535, 1),
-          h: -2_135_725_856_567_446_411,
-          v: 2,
-          op: 'n',
-          ns: '',
-          o: BSON::Document.new(msg: 'initiating set')
-        )
-        noop = described_class.from(bson)
-
-        expect(noop.to_sql).to be_nil
-      end
-    end
   end
 end

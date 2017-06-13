@@ -37,7 +37,5 @@ module Oplogjam
     end
 
     def apply(_connection); end
-
-    def to_sql; end
   end
 end

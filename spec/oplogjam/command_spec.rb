@@ -99,22 +99,5 @@ module Oplogjam
         expect(command.command).to eq(BSON::Document.new(create: 'bar'))
       end
     end
-
-    describe '#to_sql' do
-      it 'returns nil' do
-        bson = BSON::Document.new(
-          ts: BSON::Timestamp.new(1_479_420_028, 1),
-          t: 1,
-          h: -1_789_557_309_812_000_233,
-          v: 2,
-          op: 'c',
-          ns: 'foo.$cmd',
-          o: BSON::Document.new(create: 'bar')
-        )
-        command = described_class.from(bson)
-
-        expect(command.to_sql).to be_nil
-      end
-    end
   end
 end

@@ -1,32 +1,7 @@
 module Oplogjam
   class Set
-    attr_reader :tree
-
-    def initialize(tree = {})
-      @tree = tree
-    end
-
-    def populate(path)
-      tree[path] ||= Intermediate.new(path)
-    end
-
-    def set(path, value)
-      tree[path] = Assignment.new(path, value)
-    end
-
-    def update(column)
-      nodes.inject(column) do |subject, node|
-        node.update(subject)
-      end
-    end
-
-    def nodes
-      tree.values
-    end
-
     def self.from(operation)
-      set = new
-      operation.each do |dotted_path, value|
+      operation.each_with_object(new) do |(dotted_path, value), set|
 
         # Split the dotted path `a.b.c` into an array `['a', 'b', 'c']`
         path = dotted_path.split('.')
@@ -51,9 +26,30 @@ module Oplogjam
         # Set the final value on the full path
         current_node.set(path, value)
       end
+    end
 
-      # Return the finally populated set
-      set
+    attr_reader :tree
+
+    def initialize(tree = {})
+      @tree = tree
+    end
+
+    def populate(path)
+      tree[path] ||= Intermediate.new(path)
+    end
+
+    def set(path, value)
+      tree[path] = Assignment.new(path, value)
+    end
+
+    def update(column)
+      nodes.inject(column) do |subject, node|
+        node.update(subject)
+      end
+    end
+
+    def nodes
+      tree.values
     end
   end
 
