@@ -45,7 +45,7 @@ module Oplogjam
     end
 
     def apply(mapping)
-      table = mapping.get(namespace)
+      table = mapping[namespace]
       row_id = query.fetch('_id'.freeze).to_json
 
       table

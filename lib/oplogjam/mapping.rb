@@ -20,7 +20,7 @@ module Oplogjam
       self
     end
 
-    def get(namespace)
+    def [](namespace)
       mapping[namespace]
     end
   end

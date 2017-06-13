@@ -1,8 +1,20 @@
 require 'bson'
+require 'sequel'
 require 'oplogjam'
 
 module Oplogjam
   RSpec.describe Insert do
+    let(:postgres) { Sequel.connect('postgres:///oplogjam_test') }
+    let(:table) { postgres.from(:bar) }
+
+    before(:example, :database) do
+      Table.new(postgres).create(:bar)
+    end
+
+    after(:example, :database) do
+      table.truncate
+    end
+
     describe '.from' do
       it 'converts a BSON insert into an Insert' do
         bson = BSON::Document.new(
@@ -171,6 +183,60 @@ module Oplogjam
 
         expect(insert).to eq(another_insert)
       end
+    end
+
+    describe '#apply', :database do
+      it 'inserts a document as JSONB into the corresponding table' do
+        insert = build_insert
+
+        expect { insert.apply('foo.bar' => table) }.to change { table.count }.by(1)
+      end
+
+      it 'extracts the ID of the document' do
+        insert = build_insert(_id: 1)
+        insert.apply('foo.bar' => table)
+
+        expect(table.first).to include(id: 1)
+      end
+
+      it 'can store IDs of different types in the same table' do
+        insert1 = build_insert(_id: 1)
+        insert2 = build_insert(_id: '1')
+
+        expect {
+          insert1.apply('foo.bar' => table)
+          insert2.apply('foo.bar' => table)
+        }.to change { table.count }.by(2)
+      end
+
+      it 'stores the original document as JSONB' do
+        insert = build_insert(_id: 1, baz: 'quux')
+        insert.apply('foo.bar' => table)
+
+        expect(table.get(Sequel.pg_jsonb(:document).get_text('baz'))).to eq('quux')
+      end
+
+      it 'can reuse IDs if a deleted record exists' do
+        insert = build_insert(_id: 1)
+        insert.apply('foo.bar' => table)
+        table.where(id: '1').update(deleted_at: Time.now.utc)
+
+        expect { insert.apply('foo.bar' => table) }.to change { table.count }.by(1)
+      end
+    end
+
+    def build_insert(attributes = { _id: 1, baz: 'quux' })
+      bson = BSON::Document.new(
+        ts: BSON::Timestamp.new(1_496_414_570, 11),
+        t: 14,
+        h: -3_028_027_288_268_436_781,
+        v: 2,
+        op: 'i',
+        ns: 'foo.bar',
+        o: BSON::Document.new(attributes)
+      )
+
+      described_class.from(bson)
     end
   end
 end
