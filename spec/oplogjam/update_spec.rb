@@ -229,6 +229,22 @@ module Oplogjam
 
         expect(table.first).to include(:document => Sequel.pg_jsonb('a' => { 'b' => { 'c' => [nil] } }))
       end
+
+      it 'supports setting an index beyond the end of an array' do
+        table.insert(id: '1', document: '{"a":[]}')
+        update = build_update(1, '$set' => BSON::Document.new('a.1' => 1))
+        update.apply('foo.bar' => table)
+
+        expect(table.first).to include(:document => Sequel.pg_jsonb('a' => [nil, 1]))
+      end
+
+      it 'supports setting an index beyond the end of an array that does not exist' do
+        table.insert(id: '1', document: '{}')
+        update = build_update(1, '$set' => BSON::Document.new('a.1' => 1))
+        update.apply('foo.bar' => table)
+
+        expect(table.first).to include(:document => Sequel.pg_jsonb('a' => [nil, 1]))
+      end
     end
 
     def build_update(id = '1', attributes = { '$set' => BSON::Document.new('bar' => 'baz') })
