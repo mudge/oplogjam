@@ -118,132 +118,244 @@ module Oplogjam
     end
 
     describe '#apply', :database do
-      it 'supports replacing the whole document' do
-        table.insert(id: '1', document: '{}')
-        update = build_update(1, 'name' => 'Alice', 'age' => 42)
+      it 'applies { "a" : 1, "b" : 2 } to { }' do
+        table.insert(id: '1', document: '{ "_id" : 1 }')
+        update = build_update(1, { "a" => 1, "b" => 2 })
         update.apply('foo.bar' => table)
 
-        expect(table.first).to include(:document => Sequel.pg_jsonb('name' => 'Alice', 'age' => 42))
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => 1, "b" => 2 }))
       end
 
-      it 'supports setting a field' do
-        table.insert(id: '1', document: '{"name":"Alice","age":42}')
-        update = build_update(1, '$set' => BSON::Document.new('name' => 'Bob'))
+      it 'applies { "$set" : { "a" : 1 } } to { }' do
+        table.insert(id: '1', document: '{ "_id" : 1 }')
+        update = build_update(1, { "$set" => { "a" => 1 } })
         update.apply('foo.bar' => table)
 
-        expect(table.first).to include(:document => Sequel.pg_jsonb('name' => 'Bob', 'age' => 42))
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => 1 }))
       end
 
-      it 'supports setting multiple fields' do
-        table.insert(id: '1', document: '{"name":"Alice","age":42}')
-        update = build_update(1, '$set' => BSON::Document.new('name' => 'Bob', 'shoeSize' => 12))
+      it 'applies { "$set" : { "a" : 1 } } to { "a" : 0 }' do
+        table.insert(id: '1', document: '{ "_id" : 1, "a" : 0 }')
+        update = build_update(1, { "$set" => { "a" => 1 } })
         update.apply('foo.bar' => table)
 
-        expect(table.first).to include(:document => Sequel.pg_jsonb('name' => 'Bob', 'age' => 42, 'shoeSize' => 12))
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => 1 }))
       end
 
-      it 'supports setting an index on an array' do
-        table.insert(id: '1', document: '{"names":[]}')
-        update = build_update(1, '$set' => BSON::Document.new('names.0' => 'Alice'))
+      it 'applies { "$set" : { "a" : 1, "b" : 2 } } to { }' do
+        table.insert(id: '1', document: '{ "_id" : 1 }')
+        update = build_update(1, { "$set" => { "a" => 1, "b" => 2 } })
         update.apply('foo.bar' => table)
 
-        expect(table.first).to include(:document => Sequel.pg_jsonb('names' => ['Alice']))
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => 1, "b" => 2 }))
       end
 
-      it 'supports unsetting a field' do
-        table.insert(id: '1', document: '{"name":"Alice","age":42}')
-        update = build_update(1, '$unset' => BSON::Document.new('age' => ''))
+      it 'applies { "$set" : { "a" : 1, "b" : 2 } } to { "a" : 0, "b" : 0 }' do
+        table.insert(id: '1', document: '{ "_id" : 1, "a" : 0, "b" : 0 }')
+        update = build_update(1, { "$set" => { "a" => 1, "b" => 2 } })
         update.apply('foo.bar' => table)
 
-        expect(table.first).to include(:document => Sequel.pg_jsonb('name' => 'Alice'))
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => 1, "b" => 2 }))
       end
 
-      it 'supports unsetting an index on an array' do
-        table.insert(id: '1', document: '{"names":["Alice"]}')
-        update = build_update(1, '$unset' => BSON::Document.new('names.0' => ''))
+      it 'applies { "$unset" : { "a" : "" } } to { "a" : 0, "b" : 0 }' do
+        table.insert(id: '1', document: '{ "_id" : 1, "a" : 0, "b" : 0 }')
+        update = build_update(1, { "$unset" => { "a" => "" } })
         update.apply('foo.bar' => table)
 
-        expect(table.first).to include(:document => Sequel.pg_jsonb('names' => [nil]))
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "b" => 0 }))
       end
 
-      it 'supports setting and unsetting at the same time' do
-        table.insert(id: '1', document: '{"name":"Alice"}')
-        update = build_update(1, '$set' => BSON::Document.new('age' => 42), '$unset' => BSON::Document.new('name' => ''))
+      it 'applies { "$unset" : { "a" : "", "b" : "" } } to { "a" : 0, "b" : 0 }' do
+        table.insert(id: '1', document: '{ "_id" : 1, "a" : 0, "b" : 0 }')
+        update = build_update(1, { "$unset" => { "a" => "", "b" => "" } })
         update.apply('foo.bar' => table)
 
-        expect(table.first).to include(:document => Sequel.pg_jsonb('age' => 42))
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1 }))
       end
 
-      it 'supports setting nested fields' do
-        table.insert(id: '1', document: '{"a":{"b":{"c":1}}}')
-        update = build_update(1, '$set' => BSON::Document.new('a.b.c' => 2))
+      it 'applies { "$unset" : { "c" : "" } } to { "a" : 0, "b" : 0 }' do
+        table.insert(id: '1', document: '{ "_id" : 1, "a" : 0, "b" : 0 }')
+        update = build_update(1, { "$unset" => { "c" => "" } })
         update.apply('foo.bar' => table)
 
-        expect(table.first).to include(:document => Sequel.pg_jsonb('a' => { 'b' => { 'c' => 2 } }))
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => 0, "b" => 0 }))
       end
 
-      it 'supports setting multiple nested fields' do
-        table.insert(id: '1', document: '{"a":{"b":{"c":1,"d":2}}}')
-        update = build_update(1, '$set' => BSON::Document.new('a.b.c' => 3, 'a.b.d' => 4))
+      it 'applies { "$set" : { "b" : 1 }, "$unset" : { "a" : "" } } to { "a" : 0 }' do
+        table.insert(id: '1', document: '{ "_id" : 1, "a" : 0 }')
+        update = build_update(1, { "$set" => { "b" => 1 }, "$unset" => { "a" => "" } })
         update.apply('foo.bar' => table)
 
-        expect(table.first).to include(:document => Sequel.pg_jsonb('a' => { 'b' => { 'c' => 3, 'd' => 4 } }))
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "b" => 1 }))
       end
 
-      it 'supports setting nested fields when intermediates do not exist' do
-        table.insert(id: '1', document: '{}')
-        update = build_update(1, '$set' => BSON::Document.new('a.b.c' => 2))
+      it 'applies { "$set" : { "a.0" : 1 } } to { }' do
+        table.insert(id: '1', document: '{ "_id" : 1 }')
+        update = build_update(1, { "$set" => { "a.0" => 1 } })
         update.apply('foo.bar' => table)
 
-        expect(table.first).to include(:document => Sequel.pg_jsonb('a' => { 'b' => { 'c' => 2 } }))
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => { "0" => 1 } }))
       end
 
-      it 'supports setting multiple nested fields with missing intermediates' do
-        table.insert(id: '1', document: '{}')
-        update = build_update(1, '$set' => BSON::Document.new('a.b.c' => 2, 'a.e.f' => 3, 'a.g' => 4))
+      it 'applies { "$set" : { "a.0" : 1 } } to { "a" : [ ] }' do
+        table.insert(id: '1', document: '{ "_id" : 1, "a" : [ ] }')
+        update = build_update(1, { "$set" => { "a.0" => 1 } })
         update.apply('foo.bar' => table)
 
-        expect(table.first).to include(:document => Sequel.pg_jsonb('a' => { 'b' => { 'c' => 2 }, 'e' => { 'f' => 3 }, 'g' => 4 }))
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => [ 1 ] }))
       end
 
-      it 'supports setting nested indexes' do
-        table.insert(id: '1', document: '{"a":{"b":[1]}}')
-        update = build_update(1, '$set' => BSON::Document.new('a.b.1' => 2))
+      it 'applies { "$set" : { "a.0" : 1 } } to { "a" : { } }' do
+        table.insert(id: '1', document: '{ "_id" : 1, "a" : { } }')
+        update = build_update(1, { "$set" => { "a.0" => 1 } })
         update.apply('foo.bar' => table)
 
-        expect(table.first).to include(:document => Sequel.pg_jsonb('a' => { 'b' => [1, 2] }))
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => { "0" => 1 } }))
       end
 
-      it 'supports unsetting nested fields' do
-        table.insert(id: '1', document: '{"a":{"b":{"c":1}}}')
-        update = build_update(1, '$unset' => BSON::Document.new('a.b.c' => ''))
+      it 'applies { "$set" : { "a.1" : 1 } } to { "a" : [ ] }' do
+        table.insert(id: '1', document: '{ "_id" : 1, "a" : [ ] }')
+        update = build_update(1, { "$set" => { "a.1" => 1 } })
         update.apply('foo.bar' => table)
 
-        expect(table.first).to include(:document => Sequel.pg_jsonb('a' => { 'b' => {} }))
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => [ nil, 1 ] }))
       end
 
-      it 'supports unsetting nested indexes' do
-        table.insert(id: '1', document: '{"a":{"b":{"c":[1]}}}')
-        update = build_update(1, '$unset' => BSON::Document.new('a.b.c.0' => ''))
+      it 'applies { "$unset" : { "a.0" : "" } } to { }' do
+        table.insert(id: '1', document: '{ "_id" : 1 }')
+        update = build_update(1, { "$unset" => { "a.0" => "" } })
         update.apply('foo.bar' => table)
 
-        expect(table.first).to include(:document => Sequel.pg_jsonb('a' => { 'b' => { 'c' => [nil] } }))
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1 }))
       end
 
-      it 'supports setting an index beyond the end of an array' do
-        table.insert(id: '1', document: '{"a":[]}')
-        update = build_update(1, '$set' => BSON::Document.new('a.1' => 1))
+      it 'applies { "$unset" : { "a.0" : "" } } to { "a" : [ ] }' do
+        table.insert(id: '1', document: '{ "_id" : 1, "a" : [ ] }')
+        update = build_update(1, { "$unset" => { "a.0" => "" } })
         update.apply('foo.bar' => table)
 
-        expect(table.first).to include(:document => Sequel.pg_jsonb('a' => [nil, 1]))
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => [ ] }))
       end
 
-      it 'supports setting an index beyond the end of an array that does not exist' do
-        table.insert(id: '1', document: '{}')
-        update = build_update(1, '$set' => BSON::Document.new('a.1' => 1))
+      it 'applies { "$unset" : { "a.0" : "" } } to { "a" : [ 1 ] }' do
+        table.insert(id: '1', document: '{ "_id" : 1, "a" : [ 1 ] }')
+        update = build_update(1, { "$unset" => { "a.0" => "" } })
         update.apply('foo.bar' => table)
 
-        expect(table.first).to include(:document => Sequel.pg_jsonb('a' => [nil, 1]))
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => [ nil ] }))
+      end
+
+      it 'applies { "$unset" : { "a.0" : "" } } to { "a" : [ 1, 2 ] }' do
+        table.insert(id: '1', document: '{ "_id" : 1, "a" : [ 1, 2 ] }')
+        update = build_update(1, { "$unset" => { "a.0" => "" } })
+        update.apply('foo.bar' => table)
+
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => [ nil, 2 ] }))
+      end
+
+      it 'applies { "$unset" : { "a.1" : "" } } to { "a" : [ 1, 2 ] }' do
+        table.insert(id: '1', document: '{ "_id" : 1, "a" : [ 1, 2 ] }')
+        update = build_update(1, { "$unset" => { "a.1" => "" } })
+        update.apply('foo.bar' => table)
+
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => [ 1, nil ] }))
+      end
+
+      it 'applies { "$unset" : { "a.2" : "" } } to { "a" : [ 1, 2 ] }' do
+        table.insert(id: '1', document: '{ "_id" : 1, "a" : [ 1, 2 ] }')
+        update = build_update(1, { "$unset" => { "a.2" => "" } })
+        update.apply('foo.bar' => table)
+
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => [ 1, 2 ] }))
+      end
+
+      it 'applies { "$unset" : { "a.0" : "" } } to { "a" : { } }' do
+        table.insert(id: '1', document: '{ "_id" : 1, "a" : { } }')
+        update = build_update(1, { "$unset" => { "a.0" => "" } })
+        update.apply('foo.bar' => table)
+
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => { } }))
+      end
+
+      it 'applies { "$unset" : { "a.1" : "" } } to { "a" : [ ] }' do
+        table.insert(id: '1', document: '{ "_id" : 1, "a" : [ ] }')
+        update = build_update(1, { "$unset" => { "a.1" => "" } })
+        update.apply('foo.bar' => table)
+
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => [ ] }))
+      end
+
+      it 'applies { "$set" : { "a.b" : 1 } } to { }' do
+        table.insert(id: '1', document: '{ "_id" : 1 }')
+        update = build_update(1, { "$set" => { "a.b" => 1 } })
+        update.apply('foo.bar' => table)
+
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => { "b" => 1 } }))
+      end
+
+      it 'applies { "$set" : { "a.b.c" : 1 } } to { }' do
+        table.insert(id: '1', document: '{ "_id" : 1 }')
+        update = build_update(1, { "$set" => { "a.b.c" => 1 } })
+        update.apply('foo.bar' => table)
+
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => { "b" => { "c" => 1 } } }))
+      end
+
+      it 'applies { "$set" : { "a.b.c" : 1, "a.d" : 2 } } to { }' do
+        table.insert(id: '1', document: '{ "_id" : 1 }')
+        update = build_update(1, { "$set" => { "a.b.c" => 1, "a.d" => 2 } })
+        update.apply('foo.bar' => table)
+
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => { "b" => { "c" => 1 }, "d" => 2 } }))
+      end
+
+      it 'applies { "$set" : { "a.b" : 1 } } to { "a" : { } }' do
+        table.insert(id: '1', document: '{ "_id" : 1, "a" : { } }')
+        update = build_update(1, { "$set" => { "a.b" => 1 } })
+        update.apply('foo.bar' => table)
+
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => { "b" => 1 } }))
+      end
+
+      it 'applies { "$set" : { "a.b" : 1 } } to { "a" : { "b" : 0 } }' do
+        table.insert(id: '1', document: '{ "_id" : 1, "a" : { "b" : 0 } }')
+        update = build_update(1, { "$set" => { "a.b" => 1 } })
+        update.apply('foo.bar' => table)
+
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => { "b" => 1 } }))
+      end
+
+      it 'applies { "$set" : { "a.1.b" : 1 } } to { }' do
+        table.insert(id: '1', document: '{ "_id" : 1 }')
+        update = build_update(1, { "$set" => { "a.1.b" => 1 } })
+        update.apply('foo.bar' => table)
+
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => { "1" => { "b" => 1 } } }))
+      end
+
+      it 'applies { "$set" : { "a.1.b" : 1 } } to { "a" : [ ] }' do
+        table.insert(id: '1', document: '{ "_id" : 1, "a" : [ ] }')
+        update = build_update(1, { "$set" => { "a.1.b" => 1 } })
+        update.apply('foo.bar' => table)
+
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => [ nil, { "b" => 1 } ] }))
+      end
+
+      it 'applies { "$set" : { "a.1.b.1" : 1 } } to { }' do
+        table.insert(id: '1', document: '{ "_id" : 1 }')
+        update = build_update(1, { "$set" => { "a.1.b.1" => 1 } })
+        update.apply('foo.bar' => table)
+
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => { "1" => { "b" => { "1" => 1 } } } }))
+      end
+
+      it 'applies { "$set" : { "a.1.b.1" : 1 } } to { "a" : [ ] }' do
+        table.insert(id: '1', document: '{ "_id" : 1, "a" : [ ] }')
+        update = build_update(1, { "$set" => { "a.1.b.1" => 1 } })
+        update.apply('foo.bar' => table)
+
+        expect(table.first).to include(:document => Sequel.pg_jsonb({ "_id" => 1, "a" => [ nil, { "b" => { "1" => 1 } } ] }))
       end
     end
 

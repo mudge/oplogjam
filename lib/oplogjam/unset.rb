@@ -53,7 +53,21 @@ module Oplogjam
     end
 
     def delete(column)
-      column.set(path, 'null'.freeze)
+      Sequel.pg_jsonb_op(
+        Sequel.case(
+          { 'array' => Sequel.case([[Sequel.function(:jsonb_array_length, column[parent_path]) > index, column.set(path, 'null'.freeze)]], column.delete_path(path)) },
+          column.delete_path(path),
+          Sequel.function(:jsonb_typeof, column[parent_path])
+        )
+      )
+    end
+
+    def parent_path
+      path[0...-1]
+    end
+
+    def index
+      Integer(path.last, 10)
     end
   end
 end

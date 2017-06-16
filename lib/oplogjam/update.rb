@@ -56,7 +56,7 @@ module Oplogjam
     private
 
     def jsonb_update
-      return Sequel.pg_jsonb(update) if replacement?
+      return Sequel.pg_jsonb(query.merge(update)) if replacement?
 
       unsets_to_jsonb(sets_to_jsonb(Sequel.pg_jsonb(:document)))
     end
