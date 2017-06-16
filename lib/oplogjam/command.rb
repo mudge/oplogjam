@@ -1,3 +1,4 @@
+require 'oplogjam/constants'
 require 'oplogjam/types'
 
 module Oplogjam
@@ -7,10 +8,10 @@ module Oplogjam
     attr_reader :h, :ts, :ns, :o
 
     def self.from(bson)
-      h = bson.fetch('h'.freeze)
-      ts = bson.fetch('ts'.freeze)
-      ns = bson.fetch('ns'.freeze)
-      o = bson.fetch('o'.freeze)
+      h = bson.fetch(H)
+      ts = bson.fetch(TS)
+      ns = bson.fetch(NS)
+      o = bson.fetch(O)
 
       new(h, ts, ns, o)
     rescue KeyError => e

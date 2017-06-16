@@ -1,3 +1,4 @@
+require 'oplogjam/constants'
 require 'oplogjam/operation'
 
 module Oplogjam
@@ -9,12 +10,12 @@ module Oplogjam
     end
 
     def since(progress)
-      operations('ts'.freeze => { '$gt'.freeze => progress.latest })
+      operations(TS => { GREATER_THAN => progress.latest })
     end
 
     def operations(query = {})
       Enumerator.new do |yielder|
-        cursor = client.use('local'.freeze)['oplog.rs'.freeze].find(query, cursor_type: :tailable_await).no_cursor_timeout
+        cursor = client.use(LOCAL)[OPLOG].find(query, cursor_type: :tailable_await).no_cursor_timeout
 
         cursor.each do |document|
           yielder << Operation.from(document)

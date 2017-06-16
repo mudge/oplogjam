@@ -1,3 +1,4 @@
+require 'oplogjam/constants'
 require 'oplogjam/jsonb'
 require 'oplogjam/set'
 require 'oplogjam/types'
@@ -10,11 +11,11 @@ module Oplogjam
     attr_reader :h, :ts, :ns, :o2, :o
 
     def self.from(bson)
-      h = bson.fetch('h'.freeze)
-      ts = bson.fetch('ts'.freeze)
-      ns = bson.fetch('ns'.freeze)
-      o2 = bson.fetch('o2'.freeze)
-      o = bson.fetch('o'.freeze)
+      h = bson.fetch(H)
+      ts = bson.fetch(TS)
+      ns = bson.fetch(NS)
+      o2 = bson.fetch(O2)
+      o = bson.fetch(O)
 
       new(h, ts, ns, o2, o)
     rescue KeyError => e
@@ -46,7 +47,7 @@ module Oplogjam
 
     def apply(mapping)
       table = mapping[namespace]
-      row_id = query.fetch('_id'.freeze).to_json
+      row_id = query.fetch(ID).to_json
 
       table
         .where(id: row_id, deleted_at: nil)
@@ -62,19 +63,19 @@ module Oplogjam
     end
 
     def sets_to_jsonb(column)
-      return column unless update.key?('$set'.freeze)
+      return column unless update.key?(SET)
 
-      Set.from(update.fetch('$set'.freeze)).update(column)
+      Set.from(update.fetch(SET)).update(column)
     end
 
     def unsets_to_jsonb(column)
-      return column unless update.key?('$unset'.freeze)
+      return column unless update.key?(UNSET)
 
-      Unset.from(update.fetch('$unset'.freeze)).delete(column)
+      Unset.from(update.fetch(UNSET)).delete(column)
     end
 
     def replacement?
-      !update.key?('$set'.freeze) && !update.key?('$unset'.freeze)
+      !update.key?(SET) && !update.key?(UNSET)
     end
   end
 end

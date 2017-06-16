@@ -1,5 +1,6 @@
 require 'oplogjam/apply_ops'
 require 'oplogjam/command'
+require 'oplogjam/constants'
 require 'oplogjam/delete'
 require 'oplogjam/insert'
 require 'oplogjam/noop'
@@ -13,12 +14,12 @@ module Oplogjam
       op = bson.fetch('op'.freeze, 'unknown'.freeze)
 
       case op
-      when 'n'.freeze then Noop.from(bson)
-      when 'i'.freeze then Insert.from(bson)
-      when 'u'.freeze then Update.from(bson)
-      when 'd'.freeze then Delete.from(bson)
-      when 'c'.freeze
-        if bson.fetch('o'.freeze, {}).key?('applyOps'.freeze)
+      when N then Noop.from(bson)
+      when I then Insert.from(bson)
+      when U then Update.from(bson)
+      when D then Delete.from(bson)
+      when C
+        if bson.fetch(O, {}).key?(APPLY_OPS)
           ApplyOps.from(bson)
         else
           Command.from(bson)

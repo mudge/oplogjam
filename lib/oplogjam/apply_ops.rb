@@ -1,4 +1,5 @@
 require 'oplogjam/types'
+require 'oplogjam/constants'
 
 module Oplogjam
   InvalidApplyOps = Class.new(ArgumentError)
@@ -7,11 +8,11 @@ module Oplogjam
     attr_reader :h, :ts, :ns, :apply_ops
 
     def self.from(bson)
-      h = bson.fetch('h'.freeze)
-      ts = bson.fetch('ts'.freeze)
-      ns = bson.fetch('ns'.freeze)
-      o = bson.fetch('o'.freeze)
-      apply_ops = o.fetch('applyOps'.freeze)
+      h = bson.fetch(H)
+      ts = bson.fetch(TS)
+      ns = bson.fetch(NS)
+      o = bson.fetch(O)
+      apply_ops = o.fetch(APPLY_OPS)
 
       new(h, ts, ns, apply_ops)
     rescue KeyError => e

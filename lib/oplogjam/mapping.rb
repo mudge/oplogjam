@@ -31,6 +31,7 @@ module Oplogjam
     end
 
     def update(_); end
+
     def insert(_); end
   end
 end

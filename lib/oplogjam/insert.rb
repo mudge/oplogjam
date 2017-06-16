@@ -1,3 +1,4 @@
+require 'oplogjam/constants'
 require 'oplogjam/jsonb'
 require 'oplogjam/types'
 
@@ -8,10 +9,10 @@ module Oplogjam
     attr_reader :h, :ts, :ns, :o
 
     def self.from(bson)
-      h = bson.fetch('h'.freeze)
-      ts = bson.fetch('ts'.freeze)
-      ns = bson.fetch('ns'.freeze)
-      o = bson.fetch('o'.freeze)
+      h = bson.fetch(H)
+      ts = bson.fetch(TS)
+      ns = bson.fetch(NS)
+      o = bson.fetch(O)
 
       new(h, ts, ns, o)
     rescue KeyError => e
@@ -41,7 +42,7 @@ module Oplogjam
 
     def apply(mapping)
       table = mapping[namespace]
-      row_id = document.fetch('_id'.freeze).to_json
+      row_id = document.fetch(ID).to_json
 
       table.insert(id: row_id,
                    document: Sequel.pg_jsonb(document),

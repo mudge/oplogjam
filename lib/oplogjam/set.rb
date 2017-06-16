@@ -1,12 +1,12 @@
+require 'oplogjam/constants'
 require 'oplogjam/jsonb'
 
 module Oplogjam
   class Set
     def self.from(operation)
       operation.each_with_object(new) do |(dotted_path, value), set|
-
         # Split the dotted path `a.b.c` into an array `['a', 'b', 'c']`
-        path = dotted_path.split('.'.freeze)
+        path = dotted_path.split(FIELD_SEPARATOR)
         current_path = []
 
         # Start by populating the top-level set
@@ -25,7 +25,7 @@ module Oplogjam
           #
           # Note that this could either be a numeric index (which might be indexing into an array) or an object field
           # name.
-          if segment =~ /\A\d+\z/
+          if segment =~ NUMERIC_INDEX
             current_node = current_node.populate_index(current_path)
           else
             current_node = current_node.populate_field(current_path)
@@ -33,7 +33,7 @@ module Oplogjam
         end
 
         # Set the final value on the full path
-        if path.last =~ /\A\d+\z/
+        if path.last =~ NUMERIC_INDEX
           current_node.set_index(path, value)
         else
           current_node.set_field(path, value)
@@ -74,7 +74,7 @@ module Oplogjam
     end
   end
 
-  class IntermediateField
+  class Intermediate
     attr_reader :path, :tree
 
     def initialize(path, tree = {})
@@ -96,14 +96,6 @@ module Oplogjam
 
     def set_index(path, value)
       tree[path] = IndexAssignment.new(path, value)
-    end
-
-    def update(column)
-      populated_column = column.set(path, Sequel.function(:coalesce, column[path], Sequel.pg_jsonb({})))
-
-      nodes.inject(populated_column) do |subject, node|
-        node.update(subject)
-      end
     end
 
     def nodes
@@ -111,30 +103,17 @@ module Oplogjam
     end
   end
 
-  class IntermediateIndex
-    attr_reader :path, :tree
+  class IntermediateField < Intermediate
+    def update(column)
+      populated_column = column.set(path, Sequel.function(:coalesce, column[path], EMPTY_OBJECT))
 
-    def initialize(path, tree = {})
-      @path = path
-      @tree = tree
+      nodes.inject(populated_column) do |subject, node|
+        node.update(subject)
+      end
     end
+  end
 
-    def populate_field(path)
-      tree[path] ||= IntermediateField.new(path)
-    end
-
-    def populate_index(path)
-      tree[path] ||= IntermediateIndex.new(path)
-    end
-
-    def set_field(path, value)
-      tree[path] = FieldAssignment.new(path, value)
-    end
-
-    def set_index(path, value)
-      tree[path] = IndexAssignment.new(path, value)
-    end
-
+  class IntermediateIndex < Intermediate
     def update(column)
       # Now for a not-so-fun bit!
       #
@@ -147,16 +126,15 @@ module Oplogjam
       filled_array_column = (0...index).inject(column) do |subject, i|
         prior_path = parent_path + [i.to_s]
 
-        subject.set(prior_path, Sequel.function(:coalesce, column[prior_path], 'null'))
+        subject.set(prior_path, Sequel.function(:coalesce, column[prior_path], NULL))
       end
 
       populated_column = Sequel.pg_jsonb_op(
         Sequel.case(
           {
-            'array' => filled_array_column.set(path,
-                                               Sequel.function(:coalesce, filled_array_column[path], Sequel.pg_jsonb({})))
+            ARRAY_TYPE => filled_array_column.set(path, Sequel.function(:coalesce, filled_array_column[path], EMPTY_OBJECT))
           },
-          column.set(path, Sequel.function(:coalesce, column[path], Sequel.pg_jsonb({}))),
+          column.set(path, Sequel.function(:coalesce, column[path], EMPTY_OBJECT)),
           Sequel.function(:jsonb_typeof, column[parent_path])
         )
       )
@@ -173,33 +151,24 @@ module Oplogjam
     def index
       Integer(path.last, 10)
     end
-
-    def nodes
-      tree.values
-    end
   end
 
-  class FieldAssignment
+  class Assignment
     attr_reader :path, :value
 
     def initialize(path, value)
       @path = path
       @value = value
     end
+  end
 
+  class FieldAssignment < Assignment
     def update(column)
       column.set(path, value.to_json)
     end
   end
 
-  class IndexAssignment
-    attr_reader :path, :value
-
-    def initialize(path, value)
-      @path = path
-      @value = value
-    end
-
+  class IndexAssignment < Assignment
     def update(column)
       # Now for a not-so-fun bit!
       #
@@ -210,12 +179,12 @@ module Oplogjam
       filled_array_column = (0...index).inject(column) do |subject, i|
         prior_path = parent_path + [i.to_s]
 
-        subject.set(prior_path, Sequel.function(:coalesce, column[prior_path], 'null'))
+        subject.set(prior_path, Sequel.function(:coalesce, column[prior_path], NULL))
       end
 
       populated_column = Sequel.pg_jsonb_op(
         Sequel.case(
-          { 'array' => filled_array_column },
+          { ARRAY_TYPE => filled_array_column },
           column,
           Sequel.function(:jsonb_typeof, column[parent_path])
         )

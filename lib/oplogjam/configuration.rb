@@ -12,7 +12,7 @@ module Oplogjam
 
     def load(config)
       @namespaces = config.fetch('namespaces'.freeze, {})
-      @progress_options = config.fetch('progress'.freeze, { 'table'.freeze => 'oplogjam'.freeze })
+      @progress_options = config.fetch('progress'.freeze, 'table'.freeze => 'oplogjam'.freeze)
 
       self
     end
