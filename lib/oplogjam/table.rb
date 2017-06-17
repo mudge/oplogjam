@@ -1,5 +1,3 @@
-require 'oplogjam/jsonb'
-
 module Oplogjam
   class Table
     attr_reader :db

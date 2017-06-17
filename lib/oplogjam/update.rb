@@ -1,7 +1,4 @@
-require 'oplogjam/constants'
-require 'oplogjam/jsonb'
 require 'oplogjam/set'
-require 'oplogjam/types'
 require 'oplogjam/unset'
 
 module Oplogjam
@@ -59,7 +56,7 @@ module Oplogjam
     def jsonb_update
       return Sequel.pg_jsonb(query.merge(update)) if replacement?
 
-      unsets_to_jsonb(sets_to_jsonb(Sequel.pg_jsonb(:document)))
+      unsets_to_jsonb(sets_to_jsonb(Sequel.pg_jsonb_op(:document)))
     end
 
     def sets_to_jsonb(column)

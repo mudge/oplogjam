@@ -1,17 +1,16 @@
-require 'oplogjam/apply_ops'
-require 'oplogjam/command'
-require 'oplogjam/constants'
-require 'oplogjam/delete'
-require 'oplogjam/insert'
 require 'oplogjam/noop'
+require 'oplogjam/insert'
 require 'oplogjam/update'
+require 'oplogjam/delete'
+require 'oplogjam/command'
+require 'oplogjam/apply_ops'
 
 module Oplogjam
   InvalidOperation = Class.new(ArgumentError)
 
   class Operation
     def self.from(bson)
-      op = bson.fetch('op'.freeze, 'unknown'.freeze)
+      op = bson.fetch(OP, UNKNOWN)
 
       case op
       when N then Noop.from(bson)

@@ -1,6 +1,3 @@
-require 'oplogjam/types'
-require 'oplogjam/constants'
-
 module Oplogjam
   InvalidApplyOps = Class.new(ArgumentError)
 

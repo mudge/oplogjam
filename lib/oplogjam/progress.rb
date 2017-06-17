@@ -1,5 +1,3 @@
-require 'bson'
-
 module Oplogjam
   class Progress
     attr_reader :table

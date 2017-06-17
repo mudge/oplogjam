@@ -213,7 +213,7 @@ module Oplogjam
         insert = build_insert(_id: 1, baz: 'quux')
         insert.apply('foo.bar' => table)
 
-        expect(table.get(Sequel.pg_jsonb(:document).get_text('baz'))).to eq('quux')
+        expect(table.get(Sequel.pg_jsonb_op(:document).get_text('baz'))).to eq('quux')
       end
 
       it 'can reuse IDs if a deleted record exists' do

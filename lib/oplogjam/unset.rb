@@ -1,4 +1,5 @@
-require 'oplogjam/constants'
+require 'oplogjam/unset_field'
+require 'oplogjam/unset_index'
 
 module Oplogjam
   class Unset
@@ -32,54 +33,6 @@ module Oplogjam
       unsets.inject(column) do |subject, unset|
         unset.delete(subject)
       end
-    end
-  end
-
-  class UnsetField
-    attr_reader :path
-
-    def initialize(path)
-      @path = path
-    end
-
-    def delete(column)
-      column.delete_path(path)
-    end
-  end
-
-  class UnsetIndex
-    attr_reader :path
-
-    def initialize(path)
-      @path = path
-    end
-
-    def delete(column)
-      nullify_or_unset = Sequel.case(
-        [
-          [
-            Sequel.function(:jsonb_array_length, column[parent_path]) > index,
-            column.set(path, NULL)
-          ]
-        ],
-        column.delete_path(path)
-      )
-
-      Sequel.pg_jsonb_op(
-        Sequel.case(
-          { ARRAY_TYPE => nullify_or_unset },
-          column.delete_path(path),
-          Sequel.function(:jsonb_typeof, column[parent_path])
-        )
-      )
-    end
-
-    def parent_path
-      path[0...-1]
-    end
-
-    def index
-      Integer(path.last, 10)
     end
   end
 end

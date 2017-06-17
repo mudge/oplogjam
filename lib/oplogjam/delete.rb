@@ -1,6 +1,3 @@
-require 'oplogjam/constants'
-require 'oplogjam/types'
-
 module Oplogjam
   InvalidDelete = Class.new(ArgumentError)
 

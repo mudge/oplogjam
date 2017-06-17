@@ -1,7 +1,3 @@
-require 'oplogjam/constants'
-require 'oplogjam/jsonb'
-require 'oplogjam/types'
-
 module Oplogjam
   InvalidInsert = Class.new(ArgumentError)
 

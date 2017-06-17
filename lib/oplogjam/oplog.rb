@@ -1,6 +1,3 @@
-require 'oplogjam/constants'
-require 'oplogjam/operation'
-
 module Oplogjam
   class Oplog
     attr_reader :client

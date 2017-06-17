@@ -1,5 +1,3 @@
-require 'sequel'
-
 module Oplogjam
   class Mapping
     attr_reader :db, :mapping
@@ -11,8 +9,8 @@ module Oplogjam
 
     def load(mappings)
       mappings.each do |namespace, table_options|
-        table = table_options.fetch('table'.freeze)
-        schema = table_options.fetch('schema'.freeze, 'public'.freeze)
+        table = table_options.fetch(TABLE)
+        schema = table_options.fetch(SCHEMA, PUBLIC)
 
         mapping[namespace] = db.from(Sequel.qualify(schema, table))
       end
