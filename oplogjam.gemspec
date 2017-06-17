@@ -13,6 +13,7 @@ Gem::Specification.new do |s|
   s.add_dependency('mongo', '~> 2.4')
   s.add_dependency('pg', '~> 0.21')
   s.add_dependency('sequel', '~> 4.0')
+  s.add_development_dependency('rake', '~> 12.0')
   s.add_development_dependency('rspec', '~> 3.6')
   s.add_development_dependency('timecop', '~> 0.8')
 end
