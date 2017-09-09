@@ -3,10 +3,33 @@
 An experiment in writing a "safe" MongoDB oplog tailer that converts documents
 to PostgreSQL JSONB in Ruby.
 
-## Schema
+## Requirements
 
-This currently expects to write a MongoDB collection `bar` from the database
-`foo` to a table in PostgreSQL called `foo_bar` with the following schema:
+* A [MongoDB replica set](https://docs.mongodb.com/manual/replication/);
+* [PostgreSQL 9.5](https://www.postgresql.org/docs/9.5/static/release-9-5.html) or newer (for [`INSERT ON CONFLICT`](https://www.postgresql.org/docs/9.5/static/sql-insert.html#SQL-ON-CONFLICT) support).
+
+## Mapping collections to tables
+
+This library expects to replay operations on MongoDB collections on equivalent PostgreSQL tables.
+
+In order to do this, you must provide a _mapping_ between MongoDB namespaces (e.g. a database and collection name such as `foo.bar` for a collection `bar` in the database `foo`) and PostgreSQL tables (represented by [Sequel datasets](https://github.com/jeremyevans/sequel/blob/master/doc/dataset_basics.rdoc)).
+
+For example, if we only want to replay operations on `foo.bar` to a table `foo_bar` in PostgreSQL, we might have a mapping like so:
+
+```ruby
+DB = Sequel.connect('postgres:///oplogjam_test')
+mapping = { 'foo.bar' => DB[:foo_bar] }
+```
+
+Then we can pass this mapping when we call `apply` on an operation, e.g.
+
+```ruby
+oplog.operations.each do |operation|
+  operation.apply(mapping)
+end
+```
+
+In order for this to work, the PostgreSQL table `foo_bar` must have the following schema:
 
 ```
                              Table "public.foo_bar"
@@ -22,6 +45,12 @@ Indexes:
     "foo_bar_pkey" PRIMARY KEY, btree (uuid)
     "foo_bar_id_deleted_at_key" UNIQUE CONSTRAINT, btree (id, deleted_at)
     "foo_bar_id_index" UNIQUE, btree (id) WHERE deleted_at IS NULL
+```
+
+We can create this ourselves or use `Oplogjam::Table` to do it for us:
+
+```ruby
+Oplogjam::Table.new(DB).create(:foo_bar)
 ```
 
 ## API Documentation
@@ -183,6 +212,10 @@ Apply this no-op to a mapping of MongoDB namespaces (e.g. `foo.bar`) to Sequel d
 #### `Oplogjam::Command#ts`
 #### `Oplogjam::Command#==(other)`
 #### `Oplogjam::Command#apply(mapping)`
+
+### `Oplogjam::Table`
+#### `Oplogjam::Table.new(db)`
+#### `Oplogjam::Table#create(name)`
 
 ## License
 
