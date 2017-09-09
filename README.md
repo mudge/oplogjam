@@ -26,7 +26,9 @@ Indexes:
 
 ## API Documentation
 
-### `Oplogjam::Oplog.new(client)`
+### `Oplogjam::Oplog`
+
+#### `Oplogjam::Oplog.new(client)`
 
 ```ruby
 mongo = Mongo::Client.new('mongodb://localhost')
@@ -35,7 +37,7 @@ Oplogjam::Oplog.new(mongo)
 
 Return a new `Oplog` for the given `Mongo::Client` `client` connected to a replica set.
 
-### `Oplogjam::Oplogjam#operations([query])`
+#### `Oplogjam::Oplogjam#operations([query])`
 
 ```ruby
 oplog.operations.each do |operation|
@@ -47,7 +49,9 @@ oplog.operations('ts' => { '$gt' => BSON::Timestamp.new(123456, 1) })
 
 Return an infinite `Enumerator` yielding `Operation`s from the `Oplog` with an optional MongoDB query which will filter the underlying oplog.
 
-### `Oplogjam::Operation.from(bson)`
+### `Oplogjam::Operation`
+
+#### `Oplogjam::Operation.from(bson)`
 
 ```ruby
 Oplogjam::Operation.from(document)
@@ -64,7 +68,9 @@ Convert a BSON document representing a MongoDB oplog operation into a correspond
 
 Raises a `Oplogjam::InvalidOperation` if the type of operation is not recognised.
 
-### `Oplogjam::Noop.from(bson)`
+### `Oplogjam::Noop`
+
+#### `Oplogjam::Noop.from(bson)`
 
 ```ruby
 Oplogjam::Noop.from(document)
@@ -72,7 +78,9 @@ Oplogjam::Noop.from(document)
 
 Convert a BSON document representing a MongoDB oplog no-op into an `Oplogjam::Noop` instance.
 
-### `Oplogjam::Noop#message`
+Raises a `Oplogjam::InvalidNoop` error if the given document is not a valid no-op.
+
+#### `Oplogjam::Noop#message`
 
 ```ruby
 noop.message
@@ -81,7 +89,7 @@ noop.message
 
 Return the internal message of the no-op.
 
-### `Oplogjam::Noop#id`
+#### `Oplogjam::Noop#id`
 
 ```ruby
 noop.id
@@ -90,7 +98,7 @@ noop.id
 
 Return the internal, unique identifier for the no-op.
 
-### `Oplogjam::Noop#timestamp`
+#### `Oplogjam::Noop#timestamp`
 
 ```ruby
 noop.timestamp
@@ -99,7 +107,7 @@ noop.timestamp
 
 Return the time of the no-op as a `Time`.
 
-### `Oplogjam::Noop#ts`
+#### `Oplogjam::Noop#ts`
 
 ```ruby
 noop.ts
@@ -108,7 +116,7 @@ noop.ts
 
 Return the raw, underlying BSON Timestamp of the no-op.
 
-### `Oplogjam::Noop#==(other)`
+#### `Oplogjam::Noop#==(other)`
 
 ```ruby
 noop == other_noop
@@ -117,13 +125,64 @@ noop == other_noop
 
 Compares the identifiers of two no-ops and returns true if they are equal.
 
-### `Oplogjam::Noop#apply(mapping)`
+#### `Oplogjam::Noop#apply(mapping)`
 
 ```ruby
 noop.apply(mapping)
 ```
 
 Apply this no-op to a mapping of MongoDB namespaces (e.g. `foo.bar`) to Sequel datasets representing PostgreSQL tables. As no-ops do nothing, this performs no operation.
+
+### `Oplogjam::Insert`
+#### `Oplogjam::Insert.from(bson)`
+#### `Oplogjam::Insert#id`
+#### `Oplogjam::Insert#namespace`
+#### `Oplogjam::Insert#document`
+#### `Oplogjam::Insert#timestamp`
+#### `Oplogjam::Insert#ts`
+#### `Oplogjam::Insert#==(other)`
+#### `Oplogjam::Insert#apply(mapping)`
+
+### `Oplogjam::Update`
+#### `Oplogjam::Update.from(bson)`
+#### `Oplogjam::Update#id`
+#### `Oplogjam::Update#namespace`
+#### `Oplogjam::Update#update`
+#### `Oplogjam::Update#query`
+#### `Oplogjam::Update#timestamp`
+#### `Oplogjam::Update#ts`
+#### `Oplogjam::Update#==(other)`
+#### `Oplogjam::Update#apply(mapping)`
+
+### `Oplogjam::Delete`
+#### `Oplogjam::Delete.from(bson)`
+#### `Oplogjam::Delete#id`
+#### `Oplogjam::Delete#namespace`
+#### `Oplogjam::Delete#query`
+#### `Oplogjam::Delete#timestamp`
+#### `Oplogjam::Delete#ts`
+#### `Oplogjam::Delete#==(other)`
+#### `Oplogjam::Delete#apply(mapping)`
+
+### `Oplogjam::ApplyOps`
+#### `Oplogjam::ApplyOps.from(bson)`
+#### `Oplogjam::ApplyOps#id`
+#### `Oplogjam::ApplyOps#namespace`
+#### `Oplogjam::ApplyOps#operations`
+#### `Oplogjam::ApplyOps#timestamp`
+#### `Oplogjam::ApplyOps#ts`
+#### `Oplogjam::ApplyOps#==(other)`
+#### `Oplogjam::ApplyOps#apply(mapping)`
+
+### `Oplogjam::Command`
+#### `Oplogjam::Command.from(bson)`
+#### `Oplogjam::Command#id`
+#### `Oplogjam::Command#namespace`
+#### `Oplogjam::Command#command`
+#### `Oplogjam::Command#timestamp`
+#### `Oplogjam::Command#ts`
+#### `Oplogjam::Command#==(other)`
+#### `Oplogjam::Command#apply(mapping)`
 
 ## License
 
