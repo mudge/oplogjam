@@ -1,4 +1,4 @@
-require 'json'
+require 'oj'
 require 'mongo'
 
 namespace :spec do
@@ -50,7 +50,7 @@ namespace :spec do
 
       puts <<-RUBY
         it 'applies #{update.inspect} to #{start.inspect}' do
-          table.insert(id: '1', document: '#{document.merge(start).to_json}')
+          table.insert(id: '1', document: '#{Oj.dump(document.merge(start), mode: :rails)}', created_at: Time.now.utc)
           update = build_update(1, #{update.inspect})
           update.apply('foo.bar' => table)
 

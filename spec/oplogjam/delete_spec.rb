@@ -7,6 +7,7 @@ module Oplogjam
     let(:table) { postgres.from(:bar) }
 
     before(:example, :database) do
+      postgres.extension :pg_array, :pg_json
       Table.new(postgres).create(:bar)
     end
 
@@ -113,7 +114,7 @@ module Oplogjam
 
     describe '#apply', :database do
       it 'sets deleted_at against the row' do
-        table.insert(id: '1', document: '{}')
+        table.insert(id: '1', document: '{}', created_at: Time.now.utc)
         delete = build_delete(1)
 
         expect { delete.apply('foo.bar' => table) }.to change { table.exclude(deleted_at: nil).count }.by(1)
@@ -123,6 +124,13 @@ module Oplogjam
         delete = build_delete(999)
 
         expect { delete.apply('foo.bar' => table) }.not_to change { table.count }
+      end
+
+      it 'ignores deletes for unmapped tables' do
+        table.insert(id: '1', document: '{}', created_at: Time.now.utc)
+        delete = build_delete(1)
+
+        expect { delete.apply('foo.baz' => table) }.not_to change { table.count }
       end
     end
 

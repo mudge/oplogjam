@@ -38,6 +38,8 @@ module Oplogjam
 
     def apply(mapping)
       table = mapping[namespace]
+      return unless table
+
       row_id = query.fetch(ID).to_json
 
       table

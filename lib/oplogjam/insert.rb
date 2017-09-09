@@ -38,12 +38,26 @@ module Oplogjam
 
     def apply(mapping)
       table = mapping[namespace]
+      return unless table
+
       row_id = document.fetch(ID).to_json
 
-      table.insert(id: row_id,
-                   document: Sequel.pg_jsonb(document),
-                   created_at: Time.now.utc,
-                   updated_at: Time.now.utc)
+      table
+        .insert_conflict(
+          target: :id,
+          conflict_where: { deleted_at: nil },
+          update: {
+            document: Sequel[:excluded][:document],
+            created_at: Time.now.utc,
+            updated_at: Time.now.utc
+          }
+        )
+        .insert(
+          id: row_id,
+          document: Sequel.pg_jsonb(document),
+          created_at: Time.now.utc,
+          updated_at: Time.now.utc
+        )
     end
   end
 end

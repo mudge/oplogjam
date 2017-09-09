@@ -7,6 +7,7 @@ module Oplogjam
     let(:table) { postgres.from(:bar) }
 
     before(:example, :database) do
+      postgres.extension :pg_array, :pg_json
       Table.new(postgres).create(:bar)
     end
 
@@ -118,8 +119,24 @@ module Oplogjam
     end
 
     describe '#apply', :database do
+      it 'ignores updates to unmapped tables' do
+        table.insert(id: '1', document: '{"_id":1,"a":1}', created_at: Time.now.utc)
+        update = build_update(1, 'a' => 2)
+        update.apply('foo.baz' => table)
+
+        expect(table.first).to include(document: Sequel.pg_jsonb('_id' => 1, 'a' => 1))
+      end
+
+      it 'strips null bytes from updates' do
+        table.insert(id: '1', document: '{"_id":1}', created_at: Time.now.utc)
+        update = build_update(1, 'foo' => "bar\x00")
+        update.apply('foo.bar' => table)
+
+        expect(table.first).to include(document: Sequel.pg_jsonb('_id' => 1, 'foo' => 'bar'))
+      end
+
       it 'applies {"a"=>1, "b"=>2} to {}' do
-        table.insert(id: '1', document: '{"_id":1}')
+        table.insert(id: '1', document: '{"_id":1}', created_at: Time.now.utc)
         update = build_update(1, 'a' => 1, 'b' => 2)
         update.apply('foo.bar' => table)
 
@@ -127,7 +144,7 @@ module Oplogjam
       end
 
       it 'applies {"$set"=>{"a"=>1}} to {}' do
-        table.insert(id: '1', document: '{"_id":1}')
+        table.insert(id: '1', document: '{"_id":1}', created_at: Time.now.utc)
         update = build_update(1, '$set' => { 'a' => 1 })
         update.apply('foo.bar' => table)
 
@@ -135,7 +152,7 @@ module Oplogjam
       end
 
       it 'applies {"$set"=>{"a"=>1}} to {"a"=>0}' do
-        table.insert(id: '1', document: '{"_id":1,"a":0}')
+        table.insert(id: '1', document: '{"_id":1,"a":0}', created_at: Time.now.utc)
         update = build_update(1, '$set' => { 'a' => 1 })
         update.apply('foo.bar' => table)
 
@@ -143,7 +160,7 @@ module Oplogjam
       end
 
       it 'applies {"$set"=>{"a"=>1, "b"=>2}} to {}' do
-        table.insert(id: '1', document: '{"_id":1}')
+        table.insert(id: '1', document: '{"_id":1}', created_at: Time.now.utc)
         update = build_update(1, '$set' => { 'a' => 1, 'b' => 2 })
         update.apply('foo.bar' => table)
 
@@ -151,7 +168,7 @@ module Oplogjam
       end
 
       it 'applies {"$set"=>{"a"=>1, "b"=>2}} to {"a"=>0, "b"=>0}' do
-        table.insert(id: '1', document: '{"_id":1,"a":0,"b":0}')
+        table.insert(id: '1', document: '{"_id":1,"a":0,"b":0}', created_at: Time.now.utc)
         update = build_update(1, '$set' => { 'a' => 1, 'b' => 2 })
         update.apply('foo.bar' => table)
 
@@ -159,7 +176,7 @@ module Oplogjam
       end
 
       it 'applies {"$unset"=>{"a"=>""}} to {"a"=>0, "b"=>0}' do
-        table.insert(id: '1', document: '{"_id":1,"a":0,"b":0}')
+        table.insert(id: '1', document: '{"_id":1,"a":0,"b":0}', created_at: Time.now.utc)
         update = build_update(1, '$unset' => { 'a' => '' })
         update.apply('foo.bar' => table)
 
@@ -167,7 +184,7 @@ module Oplogjam
       end
 
       it 'applies {"$unset"=>{"a"=>"", "b"=>""}} to {"a"=>0, "b"=>0}' do
-        table.insert(id: '1', document: '{"_id":1,"a":0,"b":0}')
+        table.insert(id: '1', document: '{"_id":1,"a":0,"b":0}', created_at: Time.now.utc)
         update = build_update(1, '$unset' => { 'a' => '', 'b' => '' })
         update.apply('foo.bar' => table)
 
@@ -175,7 +192,7 @@ module Oplogjam
       end
 
       it 'applies {"$unset"=>{"c"=>""}} to {"a"=>0, "b"=>0}' do
-        table.insert(id: '1', document: '{"_id":1,"a":0,"b":0}')
+        table.insert(id: '1', document: '{"_id":1,"a":0,"b":0}', created_at: Time.now.utc)
         update = build_update(1, '$unset' => { 'c' => '' })
         update.apply('foo.bar' => table)
 
@@ -183,7 +200,7 @@ module Oplogjam
       end
 
       it 'applies {"$set"=>{"b"=>1}, "$unset"=>{"a"=>""}} to {"a"=>0}' do
-        table.insert(id: '1', document: '{"_id":1,"a":0}')
+        table.insert(id: '1', document: '{"_id":1,"a":0}', created_at: Time.now.utc)
         update = build_update(1, '$set' => { 'b' => 1 }, '$unset' => { 'a' => '' })
         update.apply('foo.bar' => table)
 
@@ -191,7 +208,7 @@ module Oplogjam
       end
 
       it 'applies {"$set"=>{"a.0"=>1}} to {}' do
-        table.insert(id: '1', document: '{"_id":1}')
+        table.insert(id: '1', document: '{"_id":1}', created_at: Time.now.utc)
         update = build_update(1, '$set' => { 'a.0' => 1 })
         update.apply('foo.bar' => table)
 
@@ -199,7 +216,7 @@ module Oplogjam
       end
 
       it 'applies {"$set"=>{"a.0"=>1}} to {"a"=>[]}' do
-        table.insert(id: '1', document: '{"_id":1,"a":[]}')
+        table.insert(id: '1', document: '{"_id":1,"a":[]}', created_at: Time.now.utc)
         update = build_update(1, '$set' => { 'a.0' => 1 })
         update.apply('foo.bar' => table)
 
@@ -207,7 +224,7 @@ module Oplogjam
       end
 
       it 'applies {"$set"=>{"a.0"=>1}} to {"a"=>{}}' do
-        table.insert(id: '1', document: '{"_id":1,"a":{}}')
+        table.insert(id: '1', document: '{"_id":1,"a":{}}', created_at: Time.now.utc)
         update = build_update(1, '$set' => { 'a.0' => 1 })
         update.apply('foo.bar' => table)
 
@@ -215,7 +232,7 @@ module Oplogjam
       end
 
       it 'applies {"$set"=>{"a.1"=>1}} to {"a"=>[]}' do
-        table.insert(id: '1', document: '{"_id":1,"a":[]}')
+        table.insert(id: '1', document: '{"_id":1,"a":[]}', created_at: Time.now.utc)
         update = build_update(1, '$set' => { 'a.1' => 1 })
         update.apply('foo.bar' => table)
 
@@ -223,7 +240,7 @@ module Oplogjam
       end
 
       it 'applies {"$unset"=>{"a.0"=>""}} to {}' do
-        table.insert(id: '1', document: '{"_id":1}')
+        table.insert(id: '1', document: '{"_id":1}', created_at: Time.now.utc)
         update = build_update(1, '$unset' => { 'a.0' => '' })
         update.apply('foo.bar' => table)
 
@@ -231,7 +248,7 @@ module Oplogjam
       end
 
       it 'applies {"$unset"=>{"a.0"=>""}} to {"a"=>[]}' do
-        table.insert(id: '1', document: '{"_id":1,"a":[]}')
+        table.insert(id: '1', document: '{"_id":1,"a":[]}', created_at: Time.now.utc)
         update = build_update(1, '$unset' => { 'a.0' => '' })
         update.apply('foo.bar' => table)
 
@@ -239,7 +256,7 @@ module Oplogjam
       end
 
       it 'applies {"$unset"=>{"a.0"=>""}} to {"a"=>[1]}' do
-        table.insert(id: '1', document: '{"_id":1,"a":[1]}')
+        table.insert(id: '1', document: '{"_id":1,"a":[1]}', created_at: Time.now.utc)
         update = build_update(1, '$unset' => { 'a.0' => '' })
         update.apply('foo.bar' => table)
 
@@ -247,7 +264,7 @@ module Oplogjam
       end
 
       it 'applies {"$unset"=>{"a.0"=>""}} to {"a"=>[1, 2]}' do
-        table.insert(id: '1', document: '{"_id":1,"a":[1,2]}')
+        table.insert(id: '1', document: '{"_id":1,"a":[1,2]}', created_at: Time.now.utc)
         update = build_update(1, '$unset' => { 'a.0' => '' })
         update.apply('foo.bar' => table)
 
@@ -255,7 +272,7 @@ module Oplogjam
       end
 
       it 'applies {"$unset"=>{"a.1"=>""}} to {"a"=>[1, 2]}' do
-        table.insert(id: '1', document: '{"_id":1,"a":[1,2]}')
+        table.insert(id: '1', document: '{"_id":1,"a":[1,2]}', created_at: Time.now.utc)
         update = build_update(1, '$unset' => { 'a.1' => '' })
         update.apply('foo.bar' => table)
 
@@ -263,7 +280,7 @@ module Oplogjam
       end
 
       it 'applies {"$unset"=>{"a.2"=>""}} to {"a"=>[1, 2]}' do
-        table.insert(id: '1', document: '{"_id":1,"a":[1,2]}')
+        table.insert(id: '1', document: '{"_id":1,"a":[1,2]}', created_at: Time.now.utc)
         update = build_update(1, '$unset' => { 'a.2' => '' })
         update.apply('foo.bar' => table)
 
@@ -271,7 +288,7 @@ module Oplogjam
       end
 
       it 'applies {"$unset"=>{"a.0"=>""}} to {"a"=>{}}' do
-        table.insert(id: '1', document: '{"_id":1,"a":{}}')
+        table.insert(id: '1', document: '{"_id":1,"a":{}}', created_at: Time.now.utc)
         update = build_update(1, '$unset' => { 'a.0' => '' })
         update.apply('foo.bar' => table)
 
@@ -279,7 +296,7 @@ module Oplogjam
       end
 
       it 'applies {"$unset"=>{"a.1"=>""}} to {"a"=>[]}' do
-        table.insert(id: '1', document: '{"_id":1,"a":[]}')
+        table.insert(id: '1', document: '{"_id":1,"a":[]}', created_at: Time.now.utc)
         update = build_update(1, '$unset' => { 'a.1' => '' })
         update.apply('foo.bar' => table)
 
@@ -287,7 +304,7 @@ module Oplogjam
       end
 
       it 'applies {"$set"=>{"a.b"=>1}} to {}' do
-        table.insert(id: '1', document: '{"_id":1}')
+        table.insert(id: '1', document: '{"_id":1}', created_at: Time.now.utc)
         update = build_update(1, '$set' => { 'a.b' => 1 })
         update.apply('foo.bar' => table)
 
@@ -295,7 +312,7 @@ module Oplogjam
       end
 
       it 'applies {"$set"=>{"a.b.c"=>1}} to {}' do
-        table.insert(id: '1', document: '{"_id":1}')
+        table.insert(id: '1', document: '{"_id":1}', created_at: Time.now.utc)
         update = build_update(1, '$set' => { 'a.b.c' => 1 })
         update.apply('foo.bar' => table)
 
@@ -303,7 +320,7 @@ module Oplogjam
       end
 
       it 'applies {"$set"=>{"a.b.c"=>1, "a.d"=>2}} to {}' do
-        table.insert(id: '1', document: '{"_id":1}')
+        table.insert(id: '1', document: '{"_id":1}', created_at: Time.now.utc)
         update = build_update(1, '$set' => { 'a.b.c' => 1, 'a.d' => 2 })
         update.apply('foo.bar' => table)
 
@@ -311,7 +328,7 @@ module Oplogjam
       end
 
       it 'applies {"$set"=>{"a.b"=>1}} to {"a"=>{}}' do
-        table.insert(id: '1', document: '{"_id":1,"a":{}}')
+        table.insert(id: '1', document: '{"_id":1,"a":{}}', created_at: Time.now.utc)
         update = build_update(1, '$set' => { 'a.b' => 1 })
         update.apply('foo.bar' => table)
 
@@ -319,7 +336,7 @@ module Oplogjam
       end
 
       it 'applies {"$set"=>{"a.b"=>1}} to {"a"=>{"b"=>0}}' do
-        table.insert(id: '1', document: '{"_id":1,"a":{"b":0}}')
+        table.insert(id: '1', document: '{"_id":1,"a":{"b":0}}', created_at: Time.now.utc)
         update = build_update(1, '$set' => { 'a.b' => 1 })
         update.apply('foo.bar' => table)
 
@@ -327,7 +344,7 @@ module Oplogjam
       end
 
       it 'applies {"$set"=>{"a.1.b"=>1}} to {}' do
-        table.insert(id: '1', document: '{"_id":1}')
+        table.insert(id: '1', document: '{"_id":1}', created_at: Time.now.utc)
         update = build_update(1, '$set' => { 'a.1.b' => 1 })
         update.apply('foo.bar' => table)
 
@@ -335,7 +352,7 @@ module Oplogjam
       end
 
       it 'applies {"$set"=>{"a.1.b"=>1}} to {"a"=>[]}' do
-        table.insert(id: '1', document: '{"_id":1,"a":[]}')
+        table.insert(id: '1', document: '{"_id":1,"a":[]}', created_at: Time.now.utc)
         update = build_update(1, '$set' => { 'a.1.b' => 1 })
         update.apply('foo.bar' => table)
 
@@ -343,7 +360,7 @@ module Oplogjam
       end
 
       it 'applies {"$set"=>{"a.1.b.1"=>1}} to {}' do
-        table.insert(id: '1', document: '{"_id":1}')
+        table.insert(id: '1', document: '{"_id":1}', created_at: Time.now.utc)
         update = build_update(1, '$set' => { 'a.1.b.1' => 1 })
         update.apply('foo.bar' => table)
 
@@ -351,7 +368,7 @@ module Oplogjam
       end
 
       it 'applies {"$set"=>{"a.1.b.1"=>1}} to {"a"=>[]}' do
-        table.insert(id: '1', document: '{"_id":1,"a":[]}')
+        table.insert(id: '1', document: '{"_id":1,"a":[]}', created_at: Time.now.utc)
         update = build_update(1, '$set' => { 'a.1.b.1' => 1 })
         update.apply('foo.bar' => table)
 

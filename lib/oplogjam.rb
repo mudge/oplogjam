@@ -1,14 +1,13 @@
 require 'bson'
+require 'oj'
 require 'sequel'
-require 'oplogjam/configuration'
-require 'oplogjam/operation'
 require 'oplogjam/oplog'
+require 'oplogjam/sanitizer'
+require 'oplogjam/table'
 
 module Oplogjam
   # Enable Sequel extensions for JSONB
-  Sequel.extension :pg_json
-  Sequel.extension :pg_json_ops
-  Sequel.extension :pg_array
+  Sequel.extension :pg_array, :pg_json, :pg_json_ops
 
   # Operation types
   APPLY_OPS = 'applyOps'.freeze
@@ -32,7 +31,6 @@ module Oplogjam
   ID = '_id'.freeze
   SET = '$set'.freeze
   UNSET = '$unset'.freeze
-  GREATER_THAN = '$gt'.freeze
   FIELD_SEPARATOR = '.'.freeze
   NUMERIC_INDEX = /\A\d+\z/
 
@@ -62,5 +60,10 @@ module Oplogjam
     raise TypeError, "#{document} is not a BSON Document" unless document.is_a?(BSON::Document)
 
     document
+  end
+
+  # Override JSONB serialization to sanitize data first
+  def Sequel.object_to_json(obj, *args, &blk)
+    Oj.dump(Sanitizer.sanitize(obj), mode: :rails)
   end
 end

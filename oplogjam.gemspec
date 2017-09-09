@@ -7,13 +7,13 @@ Gem::Specification.new do |s|
   s.license = 'MIT'
   s.files = %w[README.md LICENSE] + Dir['lib/**/*.rb']
   s.test_files = Dir['spec/**/*.rb']
-  s.executables << 'oplogjam'
 
   s.add_dependency('bson', '~> 4.2')
   s.add_dependency('mongo', '~> 2.4')
   s.add_dependency('pg', '~> 0.21')
-  s.add_dependency('sequel', '~> 4.0')
+  s.add_dependency('sequel', '~> 5.0')
+  s.add_dependency('oj', '~> 3.3')
   s.add_development_dependency('rake', '~> 12.0')
   s.add_development_dependency('rspec', '~> 3.6')
-  s.add_development_dependency('timecop', '~> 0.8')
+  s.add_development_dependency('timecop', '~> 0.9')
 end

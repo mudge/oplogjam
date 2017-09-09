@@ -1,13 +1,11 @@
+require 'oplogjam/operation'
+
 module Oplogjam
   class Oplog
     attr_reader :client
 
     def initialize(client)
       @client = client
-    end
-
-    def since(progress)
-      operations(TS => { GREATER_THAN => progress.latest })
     end
 
     def operations(query = {})

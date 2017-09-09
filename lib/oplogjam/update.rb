@@ -1,5 +1,4 @@
-require 'oplogjam/set'
-require 'oplogjam/unset'
+require 'oplogjam/operators'
 
 module Oplogjam
   InvalidUpdate = Class.new(ArgumentError)
@@ -44,6 +43,8 @@ module Oplogjam
 
     def apply(mapping)
       table = mapping[namespace]
+      return unless table
+
       row_id = query.fetch(ID).to_json
 
       table
@@ -62,13 +63,13 @@ module Oplogjam
     def sets_to_jsonb(column)
       return column unless update.key?(SET)
 
-      Set.from(update.fetch(SET)).update(column)
+      Operators::Set.from(update.fetch(SET)).update(column)
     end
 
     def unsets_to_jsonb(column)
       return column unless update.key?(UNSET)
 
-      Unset.from(update.fetch(UNSET)).delete(column)
+      Operators::Unset.from(update.fetch(UNSET)).delete(column)
     end
 
     def replacement?

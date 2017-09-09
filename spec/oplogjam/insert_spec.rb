@@ -1,5 +1,3 @@
-require 'bson'
-require 'sequel'
 require 'oplogjam'
 
 module Oplogjam
@@ -8,6 +6,7 @@ module Oplogjam
     let(:table) { postgres.from(:bar) }
 
     before(:example, :database) do
+      postgres.extension :pg_array, :pg_json
       Table.new(postgres).create(:bar)
     end
 
@@ -216,12 +215,48 @@ module Oplogjam
         expect(table.get(Sequel.pg_jsonb_op(:document).get_text('baz'))).to eq('quux')
       end
 
+      it 'stores BSON Object IDs as equivalent JSON objects' do
+        insert = build_insert(_id: BSON::ObjectId.from_string('59b3fbb4c97ba6c8a58a2d0c'))
+        insert.apply('foo.bar' => table)
+
+        expect(table.get(:id)).to eq('$oid' => '59b3fbb4c97ba6c8a58a2d0c')
+      end
+
       it 'can reuse IDs if a deleted record exists' do
         insert = build_insert(_id: 1)
         insert.apply('foo.bar' => table)
         table.where(id: '1').update(deleted_at: Time.now.utc)
 
         expect { insert.apply('foo.bar' => table) }.to change { table.count }.by(1)
+      end
+
+      it 'ignores inserts to unmapped tables' do
+        insert = build_insert(_id: 1)
+
+        expect { insert.apply('foo.baz' => table) }.not_to change { table.count }
+      end
+
+      it 'strips null bytes from the document' do
+        insert = build_insert(_id: 1, baz: "quux\x00")
+        insert.apply('foo.bar' => table)
+
+        expect(table.get(Sequel.pg_jsonb_op(:document).get_text('baz'))).to eq('quux')
+      end
+
+      it 'updates any existing, non-deleted records with the same ID' do
+        table.insert(id: '1', document: '{}', created_at: Time.now.utc)
+        insert = build_insert(_id: 1, baz: 'quux')
+        insert.apply('foo.bar' => table)
+
+        expect(table.get(Sequel.pg_jsonb_op(:document).get_text('baz'))).to eq('quux')
+      end
+
+      it 'only updates non-deleted records with the same ID' do
+        table.insert(id: '1', document: '{"a":1}', created_at: Time.now.utc, deleted_at: Time.now.utc)
+        insert = build_insert(_id: 1, a: 2)
+        insert.apply('foo.bar' => table)
+
+        expect(table.where(id: '1').exclude(deleted_at: nil).get(Sequel.pg_jsonb_op(:document).get_text('a'))).to eq('1')
       end
     end
 
