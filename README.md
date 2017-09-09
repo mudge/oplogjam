@@ -102,7 +102,7 @@ A table will be created with the following schema:
 * `id`: a `jsonb` representation of the primary key of the MongoDB document;
 * `document`: a `jsonb` representation of the entire MongoDB document;
 * `created_at`: the `timestamp` when this row was created by Oplogjam (_not_ by MongoDB);
-* `update_at`: the `timestamp` when this row was last updated by Oplogjam (_not_ by MongoDB);
+* `updated_at`: the `timestamp` when this row was last updated by Oplogjam (_not_ by MongoDB);
 * `deleted_at`: the `timestamp` when this row was deleted by Oplogjam (_not_ by MongoDB).
 
 It will have two constraints:
