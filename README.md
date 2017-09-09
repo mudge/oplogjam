@@ -35,7 +35,7 @@ In order for this to work, the PostgreSQL table `foo_bar` must have the followin
                              Table "public.foo_bar"
    Column   |            Type             |              Modifiers
 ------------+-----------------------------+-------------------------------------
- uuid       | uuid                        | not null default uuid_generate_v4()
+ uuid       | uuid                        | not null default uuid_generate_v1()
  id         | jsonb                       | not null
  document   | jsonb                       | not null
  created_at | timestamp without time zone | not null
@@ -77,6 +77,38 @@ oplog.operations('ts' => { '$gt' => BSON::Timestamp.new(123456, 1) })
 ```
 
 Return an infinite `Enumerator` yielding `Operation`s from the `Oplog` with an optional MongoDB query which will filter the underlying oplog.
+
+### `Oplogjam::Table`
+#### `Oplogjam::Table.new(db)`
+
+```ruby
+DB = Sequel.connect('postgres:///oplogjam_test')
+table = Oplogjam::Table.new(DB)
+```
+
+Return a new `Oplogjam::Table` for the given Sequel database connection.
+
+#### `Oplogjam::Table#create(name)`
+
+```ruby
+table.create(:foo_bar)
+```
+
+Attempt to create a table for Oplogjam's use in PostgreSQL with the given `name` if it doesn't already exist.
+
+A table will be created with the following schema:
+
+* `uuid`: a UUID v1 primary key (v1 so that they are sequential);
+* `id`: a `jsonb` representation of the primary key of the MongoDB document;
+* `document`: a `jsonb` representation of the entire MongoDB document;
+* `created_at`: the `timestamp` when this row was created by Oplogjam (_not_ by MongoDB);
+* `update_at`: the `timestamp` when this row was last updated by Oplogjam (_not_ by MongoDB);
+* `deleted_at`: the `timestamp` when this row was deleted by Oplogjam (_not_ by MongoDB).
+
+It will have two constraints:
+
+* A unique index on `id` and `deleted_at` so no two records can have the same MongoDB ID and deletion time;
+* A partial unique index on `id` where `deleted_at` is `NULL` so no two records can have the same ID and not be deleted.
 
 ### `Oplogjam::Operation`
 
@@ -212,10 +244,6 @@ Apply this no-op to a mapping of MongoDB namespaces (e.g. `foo.bar`) to Sequel d
 #### `Oplogjam::Command#ts`
 #### `Oplogjam::Command#==(other)`
 #### `Oplogjam::Command#apply(mapping)`
-
-### `Oplogjam::Table`
-#### `Oplogjam::Table.new(db)`
-#### `Oplogjam::Table#create(name)`
 
 ## License
 
