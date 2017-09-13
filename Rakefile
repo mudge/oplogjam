@@ -50,7 +50,7 @@ namespace :spec do
 
       puts <<-RUBY
         it 'applies #{update.inspect} to #{start.inspect}' do
-          table.insert(id: '1', document: '#{Oj.dump(document.merge(start), mode: :rails)}', created_at: Time.now.utc)
+          table.insert(id: '1', document: '#{Oj.dump(document.merge(start), mode: :rails)}', created_at: Time.now.utc, updated_at: Time.now.utc)
           update = build_update(1, #{update.inspect})
           update.apply('foo.bar' => table)
 

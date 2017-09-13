@@ -3,7 +3,7 @@ require 'oj'
 require 'sequel'
 require 'oplogjam/oplog'
 require 'oplogjam/sanitizer'
-require 'oplogjam/table'
+require 'oplogjam/schema'
 
 module Oplogjam
   # Enable Sequel extensions for JSONB

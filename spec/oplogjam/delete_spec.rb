@@ -4,11 +4,13 @@ require 'oplogjam'
 module Oplogjam
   RSpec.describe Delete do
     let(:postgres) { Sequel.connect('postgres:///oplogjam_test') }
+    let(:schema) { Schema.new(postgres) }
     let(:table) { postgres.from(:bar) }
 
     before(:example, :database) do
       postgres.extension :pg_array, :pg_json
-      Table.new(postgres).create(:bar)
+      schema.create_table(:bar)
+      schema.add_indexes(:bar)
     end
 
     after(:example, :database) do
@@ -114,7 +116,7 @@ module Oplogjam
 
     describe '#apply', :database do
       it 'sets deleted_at against the row' do
-        table.insert(id: '1', document: '{}', created_at: Time.now.utc)
+        table.insert(id: '1', document: '{}', created_at: Time.now.utc, updated_at: Time.now.utc)
         delete = build_delete(1)
 
         expect { delete.apply('foo.bar' => table) }.to change { table.exclude(deleted_at: nil).count }.by(1)
@@ -122,7 +124,7 @@ module Oplogjam
 
       it 'sets updated_at against the row' do
         Timecop.freeze(Time.new(2001, 1, 1, 0, 0, 0)) do
-          table.insert(id: '1', document: '{}', created_at: Time.now.utc)
+          table.insert(id: '1', document: '{}', created_at: Time.now.utc, updated_at: Time.now.utc)
           delete = build_delete(1)
           delete.apply('foo.bar' => table)
 
@@ -137,7 +139,7 @@ module Oplogjam
       end
 
       it 'ignores deletes for unmapped tables' do
-        table.insert(id: '1', document: '{}', created_at: Time.now.utc)
+        table.insert(id: '1', document: '{}', created_at: Time.now.utc, updated_at: Time.now.utc)
         delete = build_delete(1)
 
         expect { delete.apply('foo.baz' => table) }.not_to change { table.count }

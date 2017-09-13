@@ -3,11 +3,13 @@ require 'oplogjam'
 module Oplogjam
   RSpec.describe Insert do
     let(:postgres) { Sequel.connect('postgres:///oplogjam_test') }
+    let(:schema) { Schema.new(postgres) }
     let(:table) { postgres.from(:bar) }
 
     before(:example, :database) do
       postgres.extension :pg_array, :pg_json
-      Table.new(postgres).create(:bar)
+      schema.create_table(:bar)
+      schema.add_indexes(:bar)
     end
 
     after(:example, :database) do
@@ -244,7 +246,7 @@ module Oplogjam
       end
 
       it 'updates any existing, non-deleted records with the same ID' do
-        table.insert(id: '1', document: '{}', created_at: Time.now.utc)
+        table.insert(id: '1', document: '{}', created_at: Time.now.utc, updated_at: Time.now.utc)
         insert = build_insert(_id: 1, baz: 'quux')
         insert.apply('foo.bar' => table)
 
@@ -253,7 +255,7 @@ module Oplogjam
 
       it 'updates updated_at for existing records' do
         Timecop.freeze(Time.new(2001, 1, 1, 0, 0, 0)) do
-          table.insert(id: '1', document: '{}', created_at: Time.now.utc)
+          table.insert(id: '1', document: '{}', created_at: Time.now.utc, updated_at: Time.now.utc)
           insert = build_insert(_id: 1, baz: 'quux')
           insert.apply('foo.bar' => table)
 
@@ -262,7 +264,7 @@ module Oplogjam
       end
 
       it 'only updates non-deleted records with the same ID' do
-        table.insert(id: '1', document: '{"a":1}', created_at: Time.now.utc, deleted_at: Time.now.utc)
+        table.insert(id: '1', document: '{"a":1}', created_at: Time.now.utc, updated_at: Time.now.utc, deleted_at: Time.now.utc)
         insert = build_insert(_id: 1, a: 2)
         insert.apply('foo.bar' => table)
 
