@@ -55,7 +55,7 @@ In order for this to work, the PostgreSQL table `foo_bar` must have the followin
  id         | jsonb                       | not null
  document   | jsonb                       | not null
  created_at | timestamp without time zone | not null
- updated_at | timestamp without time zone |
+ updated_at | timestamp without time zone | not null
  deleted_at | timestamp without time zone |
 Indexes:
     "foo_bar_pkey" PRIMARY KEY, btree (uuid)
@@ -63,7 +63,7 @@ Indexes:
     "foo_bar_id_index" UNIQUE, btree (id) WHERE deleted_at IS NULL
 ```
 
-We can create this ourselves or use `Oplogjam::Schema` to do it for us:
+We can create this ourselves or use [`Oplogjam::Schema`](#oplogjamschema) to do it for us:
 
 ```ruby
 schema = Oplogjam::Schema.new(DB)
@@ -77,7 +77,7 @@ schema.add_indexes(:foo_bar)
 Since maintenance of MoSQL by Stripe was ended, there have been several major changes that affect anyone designing a system to replay a MongoDB oplog in PostgreSQL:
 
 * The MongoDB driver ecosystem was overhauled and the Ruby driver API changed significantly;
-* PostgreSQL 9.5 introduced the new JSONB operations such as `jsonb_set` for updating fields in JSONB objects;
+* PostgreSQL 9.5 introduced new JSONB operations such as `jsonb_set` for updating fields in JSONB objects;
 * PostgreSQL 9.5 also introduced `INSERT ON CONFLICT` for effectively "upserting" duplicate records on `INSERT`.
 
 Running MoSQL in production also revealed that we didn't need its rich support for transforming MongoDB documents into typical relational schema with typed columns but instead relied entirely on its JSONB support: effectively mirroring the MongoDB document by storing it in a single JSONB column.
@@ -88,9 +88,74 @@ With that specific use case in mind, I wanted to explore whether a library to _s
 
 While the library is more opinionated about the data schema of PostgreSQL, it doesn't attempt to make any decisions about how you decide which collections you want to replicate and where they should be replicated to. Similarly, connecting to databases, logging, etc. are all left up to the user as something that can might differ wildly.
 
-While in future, I may add an executable, for now this is up to the user to manage.
+While in future I may add an executable, for now this is up to the user to manage.
 
 ## API Documentation
+
+* [`Oplogjam::Oplog`](#oplogjamoplog)
+  * [`Oplogjam::Oplog.new(client)`](#oplogjamoplognewclient)
+  * [`Oplogjam::Oplog#operations([query])`](#oplogjamoplogoperationsquery)
+* [`Oplogjam::Schema`](#oplogjamschema)
+  * [`Oplogjam::Schema.new(db)`](#oplogjamschemadb)
+  * [`Oplogjam::Schema#create_table(name)`](#oplogjamschemacreate_tablename)
+  * [`Oplogjam::Schema#add_indexes(name)`](#oplogjamschemaadd_indexesname)
+  * [`Oplogjam::Schema#import(collection, name, batch_size = 100)`](#oplogjamschemaimportcollection-name-batch_size)
+* [`Oplogjam::Operation`](#oplogjamoperation)
+  * [`Oplogjam::Operation.from(bson)`](#oplogjamoperationfrombson)
+* [`Oplogjam::Noop`](#oplogjamnoop)
+  * [`Oplogjam::Noop.from(bson)`](#oplogjamnoopfrombson)
+  * [`Oplogjam::Noop#message`](#oplogjamnoopmessage)
+  * [`Oplogjam::Noop#id`](#oplogjamnoopid)
+  * [`Oplogjam::Noop#timestamp`](#oplogjamnooptimestamp)
+  * [`Oplogjam::Noop#ts`](#oplogjamnoopts)
+  * [`Oplogjam::Noop#==(other)`](#oplogjamnoopother)
+  * [`Oplogjam::Noop#apply(mapping)`](#oplogjamnoopapplymapping)
+* [`Oplogjam::Insert`](#oplogjaminsert)
+  * [`Oplogjam::Insert.from(bson)`](#oplogjaminsertfrombson)
+  * [`Oplogjam::Insert#id`](#oplogjaminsertid)
+  * [`Oplogjam::Insert#namespace`](#oplogjaminsertnamespace)
+  * [`Oplogjam::Insert#document`](#oplogjaminsertdocument)
+  * [`Oplogjam::Insert#timestamp`](#oplogjaminserttimestamp)
+  * [`Oplogjam::Insert#ts`](#oplogjaminsertts)
+  * [`Oplogjam::Insert#==(other)`](#oplogjaminsertother)
+  * [`Oplogjam::Insert#apply(mapping)`](#oplogjaminsertapplymapping)
+* [`Oplogjam::Update`](#oplogjamupdate)
+  * [`Oplogjam::Update.from(bson)`](#oplogjamupdatefrombson)
+  * [`Oplogjam::Update#id`](#oplogjamupdateid)
+  * [`Oplogjam::Update#namespace`](#oplogjamupdatenamespace)
+  * [`Oplogjam::Update#update`](#oplogjamupdateupdate)
+  * [`Oplogjam::Update#query`](#oplogjamupdatequery)
+  * [`Oplogjam::Update#timestamp`](#oplogjamupdatetimestamp)
+  * [`Oplogjam::Update#ts`](#oplogjamupdatets)
+  * [`Oplogjam::Update#==(other)`](#oplogjamupdateother)
+  * [`Oplogjam::Update#apply(mapping)`](#oplogjamupdateapplymapping)
+* [`Oplogjam::Delete`](#oplogjamdelete)
+  * [`Oplogjam::Delete.from(bson)`](#oplogjamdeletefrombson)
+  * [`Oplogjam::Delete#id`](#oplogjamdeleteid)
+  * [`Oplogjam::Delete#namespace`](#oplogjamdeletenamespace)
+  * [`Oplogjam::Delete#query`](#oplogjamdeletequery)
+  * [`Oplogjam::Delete#timestamp`](#oplogjamdeletetimestamp)
+  * [`Oplogjam::Delete#ts`](#oplogjamdeletets)
+  * [`Oplogjam::Delete#==(other)`](#oplogjamdeleteother)
+  * [`Oplogjam::Delete#apply(mapping)`](#oplogjamdeleteapplymapping)
+* [`Oplogjam::ApplyOps`](#oplogjamapplyops)
+  * [`Oplogjam::ApplyOps.from(bson)`](#oplogjamapplyopsfrombson)
+  * [`Oplogjam::ApplyOps#id`](#oplogjamapplyopsid)
+  * [`Oplogjam::ApplyOps#namespace`](#oplogjamapplyopsnamespace)
+  * [`Oplogjam::ApplyOps#operations`](#oplogjamapplyopsoperations)
+  * [`Oplogjam::ApplyOps#timestamp`](#oplogjamapplyopstimestamp)
+  * [`Oplogjam::ApplyOps#ts`](#oplogjamapplyopsts)
+  * [`Oplogjam::ApplyOps#==(other)`](#oplogjamapplyopsother)
+  * [`Oplogjam::ApplyOps#apply(mapping)`](#oplogjamapplyopsapplymapping)
+* [`Oplogjam::Command`](#oplogjamcommand)
+  * [`Oplogjam::Command.from(bson)`](#oplogjamcommandfrombson)
+  * [`Oplogjam::Command#id`](#oplogjamcommandid)
+  * [`Oplogjam::Command#namespace`](#oplogjamcommandnamespace)
+  * [`Oplogjam::Command#command`](#oplogjamcommandcommand)
+  * [`Oplogjam::Command#timestamp`](#oplogjamcommandtimestamp)
+  * [`Oplogjam::Command#ts`](#oplogjamcommandts)
+  * [`Oplogjam::Command#==(other)`](#oplogjamcommandother)
+  * [`Oplogjam::Command#apply(mapping)`](#oplogjamcommandapplymapping)
 
 ### `Oplogjam::Oplog`
 
@@ -103,7 +168,7 @@ mongo = Mongo::Client.new('mongodb://localhost')
 Oplogjam::Oplog.new(mongo)
 ```
 
-Return a new `Oplog` for the given [`Mongo::Client`](http://api.mongodb.com/ruby/current/Mongo/Client.html) `client` connected to a replica set.
+Return a new [`Oplogjam::Oplog`](#oplogjamoplog) for the given [`Mongo::Client`](http://api.mongodb.com/ruby/current/Mongo/Client.html) `client` connected to a replica set.
 
 #### `Oplogjam::Oplogjam#operations([query])`
 
@@ -115,7 +180,7 @@ end
 oplog.operations('ts' => { '$gt' => BSON::Timestamp.new(123456, 1) })
 ```
 
-Return an infinite `Enumerator` yielding `Operation`s from the `Oplog` with an optional MongoDB `query` which will affect the results from the underlying oplog.
+Return an infinite `Enumerator` yielding [`Operation`](#oplogjamoperation)s from the [`Oplog`](#oplogjamoplog) with an optional MongoDB `query` which will affect the results from the underlying oplog.
 
 ### `Oplogjam::Schema`
 
@@ -128,7 +193,7 @@ DB = Sequel.connect('postgres:///oplogjam_test')
 schema = Oplogjam::Schema.new(DB)
 ```
 
-Return a new `Oplogjam::Schema` for the given Sequel database connection.
+Return a new [`Oplogjam::Schema`](#oplogjamschema) for the given [Sequel database connection](http://sequel.jeremyevans.net/rdoc/classes/Sequel/Database.html).
 
 #### `Oplogjam::Schema#create_table(name)`
 
@@ -136,7 +201,7 @@ Return a new `Oplogjam::Schema` for the given Sequel database connection.
 schema.create_table(:foo_bar)
 ```
 
-Attempt to create a table for Oplogjam's use in PostgreSQL with the given `name` if it doesn't already exist. Note that the `name` may be a single `String`, `Symbol` or a Sequel qualified identifier if you're using [PostgreSQL schema](https://www.postgresql.org/docs/current/static/ddl-schemas.html).
+Attempt to create a table for Oplogjam's use in PostgreSQL with the given `name` if it doesn't already exist. Note that the `name` may be a single `String`, `Symbol` or a [Sequel qualified identifier](https://github.com/jeremyevans/sequel/blob/master/doc/sql.rdoc#identifiers) if you're using [PostgreSQL schema](https://www.postgresql.org/docs/current/static/ddl-schemas.html).
 
 A table will be created with the following schema:
 
@@ -160,7 +225,7 @@ Add the following indexes and constraints to the table with the given `name` if 
 * A unique index on `id` and `deleted_at` so no two records can have the same MongoDB ID and deletion time;
 * A partial unique index on `id` where `deleted_at` is `NULL` so no two records can have the same ID and not be deleted.
 
-Note that the `name` may be a single `String`, `Symbol` or a Sequel qualified identifier if you're using PostgreSQL schema.
+Note that the `name` may be a single `String`, `Symbol` or a [Sequel qualified identifier](https://github.com/jeremyevans/sequel/blob/master/doc/sql.rdoc#identifiers) if you're using PostgreSQL schema.
 
 If the indexes already exist on the given table, the method will do nothing.
 
@@ -170,9 +235,9 @@ If the indexes already exist on the given table, the method will do nothing.
 schema.import(mongo[:bar], :foo_bar)
 ```
 
-Batch import all existing documents from a given [`Mongo::Collection`](http://api.mongodb.com/ruby/current/Mongo/Collection.html) `collection` into the PostgreSQL table with the given `name`. Note that the `name` may be a single `String`, `Symbol` or Sequel qualified identifier if you're using PostgreSQL schema.
+Batch import all existing documents from a given [`Mongo::Collection`](http://api.mongodb.com/ruby/current/Mongo/Collection.html) `collection` into the PostgreSQL table with the given `name`. Note that the `name` may be a single `String`, `Symbol` or [Sequel qualified identifier](https://github.com/jeremyevans/sequel/blob/master/doc/sql.rdoc#identifiers) if you're using PostgreSQL schema.
 
-For performance, it's better to import existing data _before_ adding indexes to the table (hence the separate `create_table` and `add_indexes` methods).
+For performance, it's better to import existing data _before_ adding indexes to the table (hence the separate [`create_table`](#oplogjamschemacreate_tablename) and [`add_indexes`](#oplogjamschemaadd_indexesname) methods).
 
 ### `Oplogjam::Operation`
 

@@ -8,7 +8,7 @@ module Oplogjam
     let(:table) { postgres.from(:bar) }
 
     before(:example, :database) do
-      postgres.extension :pg_array, :pg_json
+      postgres.extension :pg_json
       schema.create_table(:bar)
       schema.add_indexes(:bar)
     end
