@@ -1,5 +1,10 @@
 # Oplogjam [![Build Status](https://travis-ci.org/mudge/oplogjam.svg)](https://travis-ci.org/mudge/oplogjam)
 
+**Current version:** 0.1.0  
+**Supported Ruby versions:** 2.0, 2.1, 2.2  
+**Supported MongoDB versions:** 2.4, 2.6, 3.0, 3.2, 3.4  
+**Supported PostgreSQL versions:** 9.5, 9.6
+
 An experiment in writing a "safe" MongoDB oplog tailer that converts documents to PostgreSQL JSONB in Ruby.
 
 Based on experiences running [Stripe's now deprecated MoSQL project](https://github.com/stripe/mosql) in production, this project provides a core library which stores all MongoDB documents in the same standard table schema in PostgreSQL but leaves all configuration and orchestration to the user. This means that this library can be used to _power_ an end-to-end MoSQL replacement but does not provide all functionality itself.
@@ -18,7 +23,8 @@ end
 ## Requirements
 
 * A [MongoDB replica set](https://docs.mongodb.com/manual/replication/);
-* [PostgreSQL 9.5](https://www.postgresql.org/docs/9.5/static/release-9-5.html) or newer (for [`INSERT ON CONFLICT`](https://www.postgresql.org/docs/9.5/static/sql-insert.html#SQL-ON-CONFLICT) and [`jsonb_set`](https://www.postgresql.org/docs/9.5/static/functions-json.html#FUNCTIONS-JSON-PROCESSING-TABLE) support).
+* [PostgreSQL 9.5](https://www.postgresql.org/docs/9.5/static/release-9-5.html) or newer (for [`INSERT ON CONFLICT`](https://www.postgresql.org/docs/9.5/static/sql-insert.html#SQL-ON-CONFLICT) and [`jsonb_set`](https://www.postgresql.org/docs/9.5/static/functions-json.html#FUNCTIONS-JSON-PROCESSING-TABLE) support);
+* A PostgreSQL database with the [`uuid-ossp` extension](https://www.postgresql.org/docs/current/static/uuid-ossp.html).
 
 ## Why does `apply` take a mapping?
 

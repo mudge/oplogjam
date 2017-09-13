@@ -9,10 +9,10 @@ Gem::Specification.new do |s|
   s.test_files = Dir['spec/**/*.rb']
 
   s.add_dependency('bson', '~> 4.2')
-  s.add_dependency('mongo', '~> 2.4')
+  s.add_dependency('oj', '~> 3.3')
   s.add_dependency('pg', '~> 0.21')
   s.add_dependency('sequel', '~> 5.0')
-  s.add_dependency('oj', '~> 3.3')
+  s.add_development_dependency('mongo', '~> 2.4')
   s.add_development_dependency('rake', '~> 12.0')
   s.add_development_dependency('rspec', '~> 3.6')
   s.add_development_dependency('timecop', '~> 0.9')
