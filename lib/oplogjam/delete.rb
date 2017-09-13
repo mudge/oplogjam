@@ -44,7 +44,7 @@ module Oplogjam
 
       table
         .where(id: row_id, deleted_at: nil)
-        .update(deleted_at: Time.now.utc)
+        .update(updated_at: Time.now.utc, deleted_at: Time.now.utc)
     end
   end
 end

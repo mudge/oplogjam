@@ -135,6 +135,16 @@ module Oplogjam
         expect(table.first).to include(document: Sequel.pg_jsonb('_id' => 1, 'foo' => 'bar'))
       end
 
+      it 'updates updated_at' do
+        Timecop.freeze(Time.new(2001, 1, 1, 0, 0, 0)) do
+          table.insert(id: '1', document: '{"_id":1}', created_at: Time.now.utc)
+          update = build_update(1, 'a' => 1)
+          update.apply('foo.bar' => table)
+
+          expect(table.first).to include(updated_at: Time.new(2001, 1, 1, 0, 0, 0))
+        end
+      end
+
       it 'applies {"a"=>1, "b"=>2} to {}' do
         table.insert(id: '1', document: '{"_id":1}', created_at: Time.now.utc)
         update = build_update(1, 'a' => 1, 'b' => 2)

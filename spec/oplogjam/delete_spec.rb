@@ -120,6 +120,16 @@ module Oplogjam
         expect { delete.apply('foo.bar' => table) }.to change { table.exclude(deleted_at: nil).count }.by(1)
       end
 
+      it 'sets updated_at against the row' do
+        Timecop.freeze(Time.new(2001, 1, 1, 0, 0, 0)) do
+          table.insert(id: '1', document: '{}', created_at: Time.now.utc)
+          delete = build_delete(1)
+          delete.apply('foo.bar' => table)
+
+          expect(table.first).to include(updated_at: Time.new(2001, 1, 1, 0, 0, 0))
+        end
+      end
+
       it 'ignores deletes for rows that do not exist' do
         delete = build_delete(999)
 
