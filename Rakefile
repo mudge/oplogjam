@@ -1,5 +1,9 @@
 require 'oj'
 require 'mongo'
+require 'rspec/core/rake_task'
+
+RSpec::Core::RakeTask.new(:spec)
+task default: :spec
 
 namespace :spec do
   desc 'Generate RSpec examples for updates from test cases'

@@ -1,4 +1,4 @@
-# Oplogjam
+# Oplogjam [![Build Status](https://travis-ci.org/mudge/oplogjam.svg)](https://travis-ci.org/mudge/oplogjam)
 
 An experiment in writing a "safe" MongoDB oplog tailer that converts documents to PostgreSQL JSONB in Ruby.
 
