@@ -48,7 +48,6 @@ module Oplogjam
           conflict_where: { deleted_at: nil },
           update: {
             document: Sequel[:excluded][:document],
-            created_at: Time.now.utc,
             updated_at: Time.now.utc
           }
         )

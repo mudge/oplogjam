@@ -251,6 +251,16 @@ module Oplogjam
         expect(table.get(Sequel.pg_jsonb_op(:document).get_text('baz'))).to eq('quux')
       end
 
+      it 'updates updated_at for existing records' do
+        Timecop.freeze(Time.new(2001, 1, 1, 0, 0, 0)) do
+          table.insert(id: '1', document: '{}', created_at: Time.now.utc)
+          insert = build_insert(_id: 1, baz: 'quux')
+          insert.apply('foo.bar' => table)
+
+          expect(table.first).to include(updated_at: Time.new(2001, 1, 1, 0, 0, 0))
+        end
+      end
+
       it 'only updates non-deleted records with the same ID' do
         table.insert(id: '1', document: '{"a":1}', created_at: Time.now.utc, deleted_at: Time.now.utc)
         insert = build_insert(_id: 1, a: 2)
