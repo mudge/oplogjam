@@ -45,7 +45,7 @@ module Oplogjam
       table = mapping[namespace]
       return unless table
 
-      row_id = query.fetch(ID).to_json
+      row_id = Sequel.object_to_json(query.fetch(ID))
 
       table
         .where(id: row_id, deleted_at: nil)

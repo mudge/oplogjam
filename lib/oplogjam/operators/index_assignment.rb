@@ -24,7 +24,7 @@ module Oplogjam
           )
         )
 
-        populated_column.set(path, value.to_json)
+        populated_column.set(path, Sequel.object_to_json(value))
       end
 
       def index

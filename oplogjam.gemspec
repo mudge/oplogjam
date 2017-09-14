@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name = 'oplogjam'
   s.summary = 'A Ruby library to convert MongoDB oplog entries into SQL'
-  s.version = '0.1.0'
+  s.version = '0.1.1'
   s.authors = ['Paul Mucur']
   s.homepage = 'https://github.com/mudge/oplogjam'
   s.license = 'MIT'

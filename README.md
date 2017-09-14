@@ -1,6 +1,6 @@
 # Oplogjam [![Build Status](https://travis-ci.org/mudge/oplogjam.svg)](https://travis-ci.org/mudge/oplogjam)
 
-**Current version:** 0.1.0  
+**Current version:** 0.1.1  
 **Supported Ruby versions:** 2.0, 2.1, 2.2  
 **Supported MongoDB versions:** 2.4, 2.6, 3.0, 3.2, 3.4  
 **Supported PostgreSQL versions:** 9.5, 9.6
@@ -86,7 +86,7 @@ With that specific use case in mind, I wanted to explore whether a library to _s
 
 ## Why doesn't this project come with some sort of executable?
 
-While the library is more opinionated about the data schema of PostgreSQL, it doesn't attempt to make any decisions about how you decide which collections you want to replicate and where they should be replicated to. Similarly, connecting to databases, logging, etc. are all left up to the user as something that can might differ wildly.
+While the library is more opinionated about the data schema of PostgreSQL, it doesn't attempt to make any decisions about how you decide which collections you want to replicate and where they should be replicated to. Similarly, connecting to databases, logging, etc. are all left up to the user as something that can differ wildly.
 
 While in future I may add an executable, for now this is up to the user to manage.
 
@@ -229,13 +229,13 @@ Note that the `name` may be a single `String`, `Symbol` or a [Sequel qualified i
 
 If the indexes already exist on the given table, the method will do nothing.
 
-#### `Oplogjam::Schema#import(collection, name)`
+#### `Oplogjam::Schema#import(collection, name[, batch_size = 100])`
 
 ```ruby
 schema.import(mongo[:bar], :foo_bar)
 ```
 
-Batch import all existing documents from a given [`Mongo::Collection`](http://api.mongodb.com/ruby/current/Mongo/Collection.html) `collection` into the PostgreSQL table with the given `name`. Note that the `name` may be a single `String`, `Symbol` or [Sequel qualified identifier](https://github.com/jeremyevans/sequel/blob/master/doc/sql.rdoc#identifiers) if you're using PostgreSQL schema.
+Import all existing documents from a given [`Mongo::Collection`](http://api.mongodb.com/ruby/current/Mongo/Collection.html) `collection` into the PostgreSQL table with the given `name` in batches of `batch_size` (defaults to 100). Note that the `name` may be a single `String`, `Symbol` or [Sequel qualified identifier](https://github.com/jeremyevans/sequel/blob/master/doc/sql.rdoc#identifiers) if you're using PostgreSQL schema.
 
 For performance, it's better to import existing data _before_ adding indexes to the table (hence the separate [`create_table`](#oplogjamschemacreate_tablename) and [`add_indexes`](#oplogjamschemaadd_indexesname) methods).
 

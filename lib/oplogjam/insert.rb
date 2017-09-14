@@ -40,7 +40,7 @@ module Oplogjam
       table = mapping[namespace]
       return unless table
 
-      row_id = document.fetch(ID).to_json
+      row_id = Sequel.object_to_json(document.fetch(ID))
 
       table
         .insert_conflict(
