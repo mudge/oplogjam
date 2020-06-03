@@ -8,7 +8,7 @@ module Oplogjam
       h = bson.fetch(H)
       ts = bson.fetch(TS)
       o = bson.fetch(O)
-      msg = o.fetch(MSG)
+      msg = o.fetch(MSG, nil)
 
       new(h, ts, msg)
     rescue KeyError => e

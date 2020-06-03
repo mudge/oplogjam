@@ -16,19 +16,6 @@ module Oplogjam
 
         expect(described_class.from(bson)).to be_a(described_class)
       end
-
-      it 'raises an error if the message is missing' do
-        bson = BSON::Document.new(
-          ts: BSON::Timestamp.new(1_479_419_535, 1),
-          h: -2_135_725_856_567_446_411,
-          v: 2,
-          op: 'n',
-          ns: '',
-          o: BSON::Document.new(foo: 'bar')
-        )
-
-        expect { described_class.from(bson) }.to raise_error(InvalidNoop)
-      end
     end
 
     describe '#message' do
@@ -44,6 +31,20 @@ module Oplogjam
         noop = described_class.from(bson)
 
         expect(noop.message).to eq('initiating set')
+      end
+
+      it 'returns an empty string if the message is not set' do
+        bson = BSON::Document.new(
+          ts: BSON::Timestamp.new(1_479_419_535, 1),
+          h: -2_135_725_856_567_446_411,
+          v: 2,
+          op: 'n',
+          ns: '',
+          o: BSON::Document.new
+        )
+        noop = described_class.from(bson)
+
+        expect(noop.message).to be_empty
       end
     end
 
